@@ -2,7 +2,7 @@
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { useState } from '@wordpress/element';
+import { useReducer } from '@wordpress/element';
 import {
 	Button,
 	__experimentalInputControlSuffixWrapper as InputControlSuffixWrapper,
@@ -23,15 +23,14 @@ import URLInput from './';
  * @return {JSX.Element} The URL input button component.
  */
 function URLInputButton( { url, onChange } ) {
-	const [ expanded, setExpanded ] = useState( false );
-
-	const toggle = () => {
-		setExpanded( ( prevExpanded ) => ! prevExpanded );
-	};
+	const [ expanded, toggleExpanded ] = useReducer(
+		( isExpanded ) => ! isExpanded,
+		false
+	);
 
 	const submitLink = ( event ) => {
 		event.preventDefault();
-		toggle();
+		toggleExpanded();
 	};
 
 	return (
@@ -40,7 +39,7 @@ function URLInputButton( { url, onChange } ) {
 				size="compact"
 				icon={ link }
 				label={ url ? __( 'Edit link' ) : __( 'Insert link' ) }
-				onClick={ toggle }
+				onClick={ toggleExpanded }
 				className="components-toolbar__control"
 				isPressed={ !! url }
 			/>
@@ -55,7 +54,7 @@ function URLInputButton( { url, onChange } ) {
 							className="block-editor-url-input__back"
 							icon={ arrowLeft }
 							label={ __( 'Close' ) }
-							onClick={ toggle }
+							onClick={ toggleExpanded }
 						/>
 						<URLInput
 							value={ url || '' }
