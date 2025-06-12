@@ -8,11 +8,11 @@ import clsx from 'clsx';
  */
 import { __, sprintf, _n } from '@wordpress/i18n';
 import {
-	useState,
 	useEffect,
 	useRef,
 	useCallback,
 	useMemo,
+	useReducer,
 } from '@wordpress/element';
 import { UP, DOWN, ENTER, TAB } from '@wordpress/keycodes';
 import {
@@ -45,6 +45,87 @@ import { store as blockEditorStore } from '../../store';
  */
 function isFunction( maybeFunc ) {
 	return 'function' === typeof maybeFunc;
+}
+
+// Reducer state and actions for managing component's state.
+const initialState = {
+	suggestions: [],
+	showSuggestions: false,
+	selectedSuggestion: null,
+	loading: false,
+	suggestionsValue: null,
+};
+
+/**
+ * Reducer handling the state of the URL input component.
+ *
+ * The reducer is handling the following actions:
+ *
+ * - FETCH_START: For when suggestion fetching starts.
+ * - FETCH_SUCCESS: Suggestions fetched successfully.
+ * - FETCH_FAILURE: Suggestions fetching failed.
+ * - CLEAR: Clear the suggestions and reset the state.
+ * - SHOW_SUGGESTIONS: Show the suggestions popover.
+ * - HIDE_SUGGESTIONS: Hide the suggestions popover.
+ * - SELECT_SUGGESTION: Hides suggestions & clears suggestion initially when a suggestion is selected.
+ * - SET_SELECTED_SUGGESTION: Handles setting the selected suggestion index.
+ *
+ * @param {Object} state  The current state of the URL input component.
+ * @param {Object} action The action to be handled.
+ *
+ * @return {Object} The updated state of the URL input component.
+ */
+function reducer( state, action ) {
+	switch ( action.type ) {
+		case 'FETCH_START':
+			return {
+				...state,
+				loading: true,
+				selectedSuggestion: null,
+			};
+		case 'FETCH_SUCCESS':
+			return {
+				...state,
+				loading: false,
+				suggestions: action.payload.suggestions,
+				suggestionsValue: action.payload.suggestionsValue,
+				showSuggestions: !! action.payload.suggestions.length,
+			};
+		case 'FETCH_FAILURE':
+			return {
+				...state,
+				loading: false,
+			};
+		case 'CLEAR':
+			return {
+				...state,
+				suggestions: [],
+				showSuggestions: false,
+				suggestionsValue: action.payload.suggestionsValue,
+			};
+		case 'SHOW_SUGGESTIONS':
+			return {
+				...state,
+				showSuggestions: true,
+			};
+		case 'HIDE_SUGGESTIONS':
+			return {
+				...state,
+				showSuggestions: false,
+			};
+		case 'SELECT_SUGGESTION':
+			return {
+				...state,
+				showSuggestions: false,
+				selectedSuggestion: null,
+			};
+		case 'SET_SELECTED_SUGGESTION':
+			return {
+				...state,
+				selectedSuggestion: action.payload,
+			};
+	}
+	return state;
 }
 
 /**
@@ -97,12 +178,15 @@ function URLInput( props ) {
 		value = '',
 	} = props;
 
-	// States used by component.
-	const [ suggestions, setSuggestions ] = useState( [] );
-	const [ showSuggestions, setShowSuggestions ] = useState( false );
-	const [ selectedSuggestion, setSelectedSuggestion ] = useState( null );
-	const [ loading, setLoading ] = useState( false );
-	const [ suggestionsValue, setSuggestionsValue ] = useState( null );
+	// States managed by the reducer pattern.
+	const [ state, dispatch ] = useReducer( reducer, initialState );
+	const {
+		suggestions,
+		showSuggestions,
+		selectedSuggestion,
+		loading,
+		suggestionsValue,
+	} = state;
 
 	// Refs for DOM nodes and instance variables that don't trigger re-renders.
 	const inputRef = useRef( null );
@@ -154,22 +238,19 @@ function URLInput( props ) {
 			// - this is a direct entry (eg: a URL)
 			if (
 				! isInitialSuggestions &&
-				( trimmedValue.length < 2 ||
+				( 2 > trimmedValue.length ||
 					( ! handleURLSuggestions && isURL( trimmedValue ) ) )
 			) {
 				suggestionsRequest.current?.cancel?.();
 				suggestionsRequest.current = null;
-
-				setSuggestions( [] );
-				setShowSuggestions( false );
-				setSuggestionsValue( trimmedValue );
-				setLoading( false );
-
+				dispatch( {
+					type: 'CLEAR',
+					payload: { suggestionsValue: trimmedValue },
+				} );
 				return;
 			}
 
-			setLoading( true );
-			setSelectedSuggestion( null );
+			dispatch( { type: 'FETCH_START' } );
 
 			const request = fetchLinkSuggestions( trimmedValue, {
 				isInitialSuggestions,
@@ -181,14 +262,17 @@ function URLInput( props ) {
 					// A fetch Promise doesn't have an abort option. It's mimicked by
 					// comparing the request reference on the instance, which is
 					// reset or deleted on subsequent requests or unmounting.
-					if ( suggestionsRequest.current !== request ) {
+					if ( request !== suggestionsRequest.current ) {
 						return;
 					}
 
-					setSuggestions( newSuggestions );
-					setSuggestionsValue( trimmedValue );
-					setLoading( false );
-					setShowSuggestions( !! newSuggestions.length );
+					dispatch( {
+						type: 'FETCH_SUCCESS',
+						payload: {
+							suggestions: newSuggestions,
+							suggestionsValue: trimmedValue,
+						},
+					} );
 
 					if ( !! newSuggestions.length ) {
 						debouncedSpeak(
@@ -208,16 +292,15 @@ function URLInput( props ) {
 					}
 				} )
 				.catch( () => {
-					if ( suggestionsRequest.current !== request ) {
+					if ( request !== suggestionsRequest.current ) {
 						return;
 					}
-
-					setLoading( false );
+					dispatch( { type: 'FETCH_FAILURE' } );
 				} )
 				.finally( () => {
 					// If this is the current promise then reset the reference
 					// to allow for checking if a new request is made.
-					if ( suggestionsRequest.current === request ) {
+					if ( request === suggestionsRequest.current ) {
 						suggestionsRequest.current = null;
 					}
 				} );
@@ -238,11 +321,10 @@ function URLInput( props ) {
 	 */
 	useEffect( () => {
 		// When value changes, we want to reset the selected suggestion.
-		setSelectedSuggestion( null );
+		dispatch( { type: 'SET_SELECTED_SUGGESTION', payload: null } );
 
 		if ( disableSuggestions ) {
-			setSuggestions( [] );
-			setShowSuggestions( false );
+			dispatch( { type: 'CLEAR', payload: { suggestionsValue: null } } );
 			return;
 		}
 
@@ -252,8 +334,7 @@ function URLInput( props ) {
 			debouncedUpdateSuggestions();
 		} else {
 			// Hide suggestions if value is cleared and not showing initial ones.
-			setSuggestions( [] );
-			setShowSuggestions( false );
+			dispatch( { type: 'CLEAR', payload: { suggestionsValue: null } } );
 		}
 
 		// Cleanup function to cancel any pending requests or debounced calls.
@@ -309,8 +390,7 @@ function URLInput( props ) {
 	const selectLink = useCallback(
 		( suggestion ) => {
 			onChange( suggestion.url, suggestion );
-			setShowSuggestions( false );
-			setSelectedSuggestion( null );
+			dispatch( { type: 'SELECT_SUGGESTION' } );
 		},
 		[ onChange ]
 	);
@@ -353,8 +433,8 @@ function URLInput( props ) {
 		}
 
 		// If there are suggestions, show them on focus.
-		if ( suggestions.length > 0 ) {
-			setShowSuggestions( true );
+		if ( 0 < suggestions.length ) {
+			dispatch( { type: 'SHOW_SUGGESTIONS' } );
 		}
 	}, [
 		value,
@@ -430,7 +510,10 @@ function URLInput( props ) {
 						null === selectedSuggestion || 0 === selectedSuggestion
 							? suggestions.length - 1
 							: selectedSuggestion - 1;
-					setSelectedSuggestion( previousIndex );
+					dispatch( {
+						type: 'SET_SELECTED_SUGGESTION',
+						payload: previousIndex,
+					} );
 					break;
 				}
 				case DOWN: {
@@ -440,7 +523,10 @@ function URLInput( props ) {
 						selectedSuggestion === suggestions.length - 1
 							? 0
 							: selectedSuggestion + 1;
-					setSelectedSuggestion( nextIndex );
+					dispatch( {
+						type: 'SET_SELECTED_SUGGESTION',
+						payload: nextIndex,
+					} );
 					break;
 				}
 				case TAB: {
