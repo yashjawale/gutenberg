@@ -44,7 +44,7 @@ import { store as blockEditorStore } from '../../store';
  * @return {boolean} True if the argument is a function, false otherwise.
  */
 function isFunction( maybeFunc ) {
-	return typeof maybeFunc === 'function';
+	return 'function' === typeof maybeFunc;
 }
 
 /**
@@ -233,30 +233,34 @@ function URLInput( props ) {
 	);
 
 	/**
-	 * Runs when the `value` prop changes.
-	 * Triggers the suggestion update logic.
+	 * Manages fetching and showing suggestions based
+	 * on prop changes. Also contains all cleanup logic.
 	 */
 	useEffect( () => {
-		// Update suggestions when the value changes.
-		if ( ! disableSuggestions ) {
-			if ( value?.length ) {
-				// If the new value is not empty we need to update with suggestions for it.
-				debouncedUpdateSuggestions( value );
-			} else if ( __experimentalShowInitialSuggestions ) {
-				// If the new value is empty and we can show initial suggestions, then show initial suggestions.
-				debouncedUpdateSuggestions();
-			} else {
-				// Hide suggestions if value is cleared and not showing initial ones.
-				setSuggestions( [] );
-				setShowSuggestions( false );
-			}
-		}
-
 		// When value changes, we want to reset the selected suggestion.
 		setSelectedSuggestion( null );
 
-		// Cleanup the debounced function on unmount or before the next run.
-		return () => debouncedUpdateSuggestions.cancel();
+		if ( disableSuggestions ) {
+			setSuggestions( [] );
+			setShowSuggestions( false );
+			return;
+		}
+
+		if ( value?.length ) {
+			debouncedUpdateSuggestions( value );
+		} else if ( __experimentalShowInitialSuggestions ) {
+			debouncedUpdateSuggestions();
+		} else {
+			// Hide suggestions if value is cleared and not showing initial ones.
+			setSuggestions( [] );
+			setShowSuggestions( false );
+		}
+
+		// Cleanup function to cancel any pending requests or debounced calls.
+		return () => {
+			suggestionsRequest.current?.cancel?.();
+			debouncedUpdateSuggestions.cancel();
+		};
 	}, [
 		value,
 		disableSuggestions,
@@ -265,13 +269,13 @@ function URLInput( props ) {
 	] );
 
 	/**
-	 * Runs when the selected suggestion changes.
-	 * Responsible for scrolling the selected suggestion into view.
+	 * A side effect that runs when the selected suggestion changes.
+	 * It scrolls the selected suggestion into view.
+	 * This replaces the `componentDidUpdate` logic for scrolling.
 	 */
 	useEffect( () => {
-		/**
-		 * Only have to worry about scrolling selected suggestion into view when already expanded.
-		 */
+		// Only have to worry about scrolling selected suggestion into view
+		// when already expanded.
 		if (
 			showSuggestions &&
 			null !== selectedSuggestion &&
@@ -284,27 +288,6 @@ function URLInput( props ) {
 			} );
 		}
 	}, [ showSuggestions, selectedSuggestion ] );
-
-	/**
-	 * Runs only once on mount.
-	 * Loads initial suggestions if needed and sets up cleanup for unmounting.
-	 */
-	useEffect( () => {
-		const shouldShowInitialSuggestions =
-			__experimentalShowInitialSuggestions && ! ( value && value.length );
-		if ( shouldShowInitialSuggestions ) {
-			updateSuggestions();
-		}
-		// Cancel any pending requests on unmount.
-		return () => {
-			suggestionsRequest.current?.cancel?.();
-		};
-	}, [
-		__experimentalShowInitialSuggestions,
-		value,
-		updateSuggestions,
-		suggestionsRequest,
-	] );
 
 	/**
 	 * Binds a suggestion node to the `suggestionNodes` ref.
@@ -566,12 +549,12 @@ function URLInput( props ) {
 			role: 'listbox',
 		};
 
-		const buildSuggestionItemProps = ( suggestion, index ) => ( {
+		const buildSuggestionItemProps = ( _suggestion, index ) => ( {
 			role: 'option',
 			tabIndex: '-1',
 			id: `${ suggestionOptionIdPrefix }-${ index }`,
 			ref: bindSuggestionNode( index ),
-			'aria-selected': index === selectedSuggestion,
+			'aria-selected': index === selectedSuggestion ? true : undefined,
 		} );
 
 		if ( isFunction( renderSuggestions ) ) {
