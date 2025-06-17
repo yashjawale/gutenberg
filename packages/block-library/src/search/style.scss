@@ -1,6 +1,10 @@
 $button-spacing-x: $grid-unit-10 + math.div($grid-unit-05, 2); // 10px
 $button-spacing-y: math.div($grid-unit-15, 2); // 6px
 
+form.wp-block-search {
+	transition: width 3s ease !important;
+}
+
 .wp-block-search__button {
 	margin-left: $button-spacing-x;
 	word-break: normal;
@@ -30,6 +34,7 @@ $button-spacing-y: math.div($grid-unit-15, 2); // 6px
 	display: flex;
 	flex: auto;
 	flex-wrap: nowrap;
+	justify-content: flex-end;
 	max-width: 100%;
 }
 
@@ -42,6 +47,9 @@ $button-spacing-y: math.div($grid-unit-15, 2); // 6px
 	flex-grow: 1;
 	margin-left: 0;
 	margin-right: 0;
+	top: 0;
+	right: 0;
+	position: relative;
 	min-width: 3rem;
 	border: 1px solid $gray-600;
 	// !important used to forcibly prevent undesired application of
