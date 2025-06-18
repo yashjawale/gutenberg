@@ -70,7 +70,7 @@ $button-spacing-y: math.div($grid-unit-15, 2); // 6px
 
 	.wp-block-search__input {
 		transition-duration: 300ms;
-		flex-basis: 100%;
+		width: 250px;
 	}
 
 	// !important here to override inline styles on button only deselected view.
@@ -90,7 +90,7 @@ $button-spacing-y: math.div($grid-unit-15, 2); // 6px
 			border-right-width: 0 !important;
 			flex-grow: 0;
 			margin: 0;
-			flex-basis: 0;
+			flex-basis: 100%;
 		}
 	}
 }
@@ -110,7 +110,6 @@ $button-spacing-y: math.div($grid-unit-15, 2); // 6px
 :where(.wp-block-search__button-inside .wp-block-search__inside-wrapper) {
 	padding: $grid-unit-05;
 	border: 1px solid $gray-600;
-	background-color: $white;
 	box-sizing: border-box;
 
 	.wp-block-search__input {
