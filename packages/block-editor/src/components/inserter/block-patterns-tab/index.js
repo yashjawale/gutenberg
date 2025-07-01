@@ -1,9 +1,9 @@
 /**
  * WordPress dependencies
  */
-import { useState } from '@wordpress/element';
+import { useState, useEffect } from '@wordpress/element';
 import { useViewportMatch } from '@wordpress/compose';
-import { Button } from '@wordpress/components';
+import { Button, Spinner } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
 /**
@@ -24,10 +24,21 @@ function BlockPatternsTab( {
 	children,
 } ) {
 	const [ showPatternsExplorer, setShowPatternsExplorer ] = useState( false );
+	const [ initialLoaded, setInitialLoaded ] = useState( false );
 
 	const categories = usePatternCategories( rootClientId );
 
 	const isMobile = useViewportMatch( 'medium', '<' );
+
+	useEffect( () => {
+		if ( categories?.length > 0 && ! initialLoaded ) {
+			setInitialLoaded( true );
+		}
+	}, [ initialLoaded, categories ] );
+
+	if ( ! initialLoaded ) {
+		return <Spinner />;
+	}
 
 	if ( ! categories.length ) {
 		return <InserterNoResults />;
