@@ -5,6 +5,12 @@
 	width: 24px;
 	height: 24px;
 
+	// Prevents the icon image from overflowing the container.
+	img {
+		max-width: 100%;
+		height: auto;
+	}
+
 	&.has-colors {
 		svg {
 			fill: currentColor;

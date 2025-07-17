@@ -12,6 +12,12 @@
 	height: calc(100% - #{$button-size} - #{$grid-unit-10});
 	overflow-y: auto;
 	padding: $grid-unit-10;
+
+	// Prevents the icon image from overflowing the container.
+	img {
+		max-width: 100%;
+		height: auto;
+	}
 }
 
 .edit-widgets-editor__list-view-panel-header {
