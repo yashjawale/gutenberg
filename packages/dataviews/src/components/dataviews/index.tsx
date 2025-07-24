@@ -59,6 +59,7 @@ type DataViewsProps< Item > = {
 	header?: ReactNode;
 	getItemLevel?: ( item: Item ) => number;
 	children?: ReactNode;
+	perPageSizes?: [ number, number, number, number ];
 } & ( Item extends ItemWithId
 	? { getItemId?: ( item: Item ) => string }
 	: { getItemId: ( item: Item ) => string } );
@@ -132,6 +133,7 @@ function DataViews< Item >( {
 	isItemClickable = defaultIsItemClickable,
 	header,
 	children,
+	perPageSizes,
 }: DataViewsProps< Item > ) {
 	const containerRef = useRef< HTMLDivElement | null >( null );
 	const [ containerWidth, setContainerWidth ] = useState( 0 );
@@ -195,6 +197,7 @@ function DataViews< Item >( {
 				filters,
 				isShowingFilter,
 				setIsShowingFilter,
+				perPageSizes,
 			} }
 		>
 			<div

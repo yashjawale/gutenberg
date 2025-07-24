@@ -35,6 +35,7 @@ import { COVER_MIN_HEIGHT, mediaPosition } from '../shared';
 import { unlock } from '../../lock-unlock';
 import { useToolsPanelDropdownMenuProps } from '../../utils/hooks';
 import { DEFAULT_MEDIA_SIZE_SLUG } from '../constants';
+import PosterImage from './poster-image';
 
 const { cleanEmptyObject, ResolutionTool, HTMLElementControl } = unlock(
 	blockEditorPrivateApis
@@ -110,6 +111,7 @@ export default function CoverInspectorControls( {
 		minHeightUnit,
 		alt,
 		tagName,
+		poster,
 	} = attributes;
 	const {
 		isVideoBackground,
@@ -198,6 +200,7 @@ export default function CoverInspectorControls( {
 								focalPoint: undefined,
 								isRepeated: false,
 								alt: '',
+								poster: undefined,
 							} );
 							updateImage( DEFAULT_MEDIA_SIZE_SLUG );
 						} }
@@ -208,7 +211,7 @@ export default function CoverInspectorControls( {
 								<ToolsPanelItem
 									label={ __( 'Fixed background' ) }
 									isShownByDefault
-									hasValue={ () => hasParallax }
+									hasValue={ () => !! hasParallax }
 									onDeselect={ () =>
 										setAttributes( {
 											hasParallax: false,
@@ -219,7 +222,7 @@ export default function CoverInspectorControls( {
 									<ToggleControl
 										__nextHasNoMarginBottom
 										label={ __( 'Fixed background' ) }
-										checked={ hasParallax }
+										checked={ !! hasParallax }
 										onChange={ toggleParallax }
 									/>
 								</ToolsPanelItem>
@@ -268,6 +271,12 @@ export default function CoverInspectorControls( {
 									}
 								/>
 							</ToolsPanelItem>
+						) }
+						{ isVideoBackground && (
+							<PosterImage
+								poster={ poster }
+								setAttributes={ setAttributes }
+							/>
 						) }
 						{ ! useFeaturedImage && url && ! isVideoBackground && (
 							<ToolsPanelItem

@@ -216,14 +216,15 @@ export function selectBlock( clientId, initialPosition = 0 ) {
  * Returns an action object used in signalling that the block with the
  * specified client ID has been hovered.
  *
- * @param {string} clientId Block client ID.
- *
- * @return {Object} Action object.
+ * @deprecated
  */
-export function hoverBlock( clientId ) {
+export function hoverBlock() {
+	deprecated( 'wp.data.dispatch( "core/block-editor" ).hoverBlock', {
+		since: '6.9',
+		version: '7.1',
+	} );
 	return {
-		type: 'HOVER_BLOCK',
-		clientId,
+		type: 'DO_NOTHING',
 	};
 }
 
@@ -1254,7 +1255,14 @@ export const mergeBlocks =
 		}
 
 		if ( ! blockAType.merge ) {
-			dispatch.selectBlock( blockA.clientId );
+			if ( isUnmodifiedBlock( blockB, 'content' ) ) {
+				dispatch.removeBlock(
+					clientIdB,
+					select.isBlockSelected( clientIdB )
+				);
+			} else {
+				dispatch.selectBlock( blockA.clientId );
+			}
 			return;
 		}
 
