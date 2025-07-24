@@ -46,9 +46,13 @@ import { unlock } from '../lock-unlock';
 
 const ALLOWED_MEDIA_TYPES = [ 'image' ];
 const { ResolutionTool } = unlock( blockEditorPrivateApis );
-const DEFAULT_MEDIA_SIZE_SLUG = 'post-thumbnail';
 
-function FeaturedImageResolutionTool( { image, value, onChange } ) {
+function FeaturedImageResolutionTool( {
+	image,
+	value,
+	onChange,
+	supportsPostThumbnails,
+} ) {
 	const { imageSizes } = useSelect( ( select ) => {
 		const { getSettings } = select( blockEditorStore );
 		return {
@@ -60,16 +64,36 @@ function FeaturedImageResolutionTool( { image, value, onChange } ) {
 		return null;
 	}
 
-	const imageSizeOptions = imageSizes
+	let imageSizeOptions = imageSizes
 		.filter(
 			( { slug } ) => image?.media_details?.sizes?.[ slug ]?.source_url
 		)
 		.map( ( { name, slug } ) => ( { value: slug, label: name } ) );
 
+	// Modify the available resolution options based on theme support.
+	// See: https://github.com/WordPress/gutenberg/issues/70526
+	if ( supportsPostThumbnails ) {
+		// If theme supports post-thumbnail size:
+		// Default -> '', Thumbnail -> thumbnail, Medium -> medium, Full Size -> full
+		imageSizeOptions = [
+			{ value: '', label: __( 'Default' ) },
+			...imageSizeOptions,
+		];
+	} else {
+		// If theme does not support post-thumbnail size:
+		// Thumbnail -> thumbnail, Medium -> medium, Full Size -> ''
+		imageSizeOptions = imageSizeOptions.map( ( option ) => {
+			if ( option.value === 'full' ) {
+				return { ...option, value: '' };
+			}
+			return option;
+		} );
+	}
+
 	return (
 		<ResolutionTool
 			value={ value }
-			defaultValue={ DEFAULT_MEDIA_SIZE_SLUG }
+			defaultValue=""
 			options={ imageSizeOptions }
 			onChange={ onChange }
 		/>
@@ -95,6 +119,20 @@ export default function PostFeaturedImageEdit( {
 		useFirstImageFromPost,
 	} = attributes;
 	const [ temporaryURL, setTemporaryURL ] = useState();
+
+	// Check if theme supports post-thumbnails to determine the correct default value.
+	const { themeSupports } = useSelect( ( select ) => {
+		const { getThemeSupports } = select( coreStore );
+		return {
+			themeSupports: getThemeSupports(),
+		};
+	}, [] );
+
+	const postThumbnailSupport = themeSupports?.[ 'post-thumbnails' ];
+	const supportsPostThumbnails =
+		postThumbnailSupport === true ||
+		( Array.isArray( postThumbnailSupport ) &&
+			postThumbnailSupport.includes( postTypeSlug ) );
 
 	const [ storedFeaturedImage, setFeaturedImage ] = useEntityProp(
 		'postType',
@@ -248,7 +286,7 @@ export default function PostFeaturedImageEdit( {
 								isLink: false,
 								linkTarget: '_self',
 								rel: '',
-								sizeSlug: DEFAULT_MEDIA_SIZE_SLUG,
+								sizeSlug: undefined,
 							} );
 						} }
 						dropdownMenuProps={ dropdownMenuProps }
@@ -339,9 +377,17 @@ export default function PostFeaturedImageEdit( {
 						{ !! media && (
 							<FeaturedImageResolutionTool
 								image={ media }
-								value={ sizeSlug }
+								value={ sizeSlug || '' }
 								onChange={ ( nextSizeSlug ) =>
-									setAttributes( { sizeSlug: nextSizeSlug } )
+									setAttributes( {
+										sizeSlug:
+											nextSizeSlug === ''
+												? undefined
+												: nextSizeSlug,
+									} )
+								}
+								supportsPostThumbnails={
+									supportsPostThumbnails
 								}
 							/>
 						) }
