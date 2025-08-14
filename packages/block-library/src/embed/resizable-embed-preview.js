@@ -6,13 +6,13 @@ import clsx from 'clsx';
 /**
  * WordPress dependencies
  */
-import { __, sprintf } from '@wordpress/i18n';
+import { __, sprintf, isRTL } from '@wordpress/i18n';
 import { Placeholder, SandBox, ResizableBox } from '@wordpress/components';
 import { BlockIcon, store as blockEditorStore } from '@wordpress/block-editor';
-import { useState, useRef } from '@wordpress/element';
+import { useState, useCallback } from '@wordpress/element';
 import { useDispatch } from '@wordpress/data';
 import { getAuthority } from '@wordpress/url';
-import { useResizeObserver } from '@wordpress/compose';
+import { useResizeObserver, useMergeRefs } from '@wordpress/compose';
 
 /**
  * Internal dependencies
@@ -35,7 +35,8 @@ export default function ResizableEmbedPreview( {
 	const [ interactive, setInteractive ] = useState( false );
 	const [ resizeDelta, setResizeDelta ] = useState( null );
 	const [ pixelSize, setPixelSize ] = useState( {} );
-	const containerRef = useRef();
+	const [ offsetTop, setOffsetTop ] = useState( 0 );
+	const [ embedElement, setEmbedElement ] = useState();
 
 	const { toggleSelection } = useDispatch( blockEditorStore );
 
@@ -48,13 +49,21 @@ export default function ResizableEmbedPreview( {
 	// Use resize observer like image block - attach to embed container
 	const setResizeObserved = useResizeObserver( ( [ entry ] ) => {
 		if ( ! resizeDelta ) {
-			const [ box ] = entry.borderBoxSize || [ entry.contentRect ];
+			const [ box ] = entry.borderBoxSize;
 			setPixelSize( {
-				width: box.inlineSize || box.width,
-				height: box.blockSize || box.height,
+				width: box.inlineSize,
+				height: box.blockSize,
 			} );
 		}
+		// This is usually 0 unless the embed height is less than the line-height.
+		setOffsetTop( entry.target.offsetTop );
 	} );
+
+	const effectResizeableBoxPlacement = useCallback( () => {
+		setOffsetTop( embedElement?.offsetTop ?? 0 );
+	}, [ embedElement ] );
+
+	const setRefs = useMergeRefs( [ setEmbedElement, setResizeObserved ] );
 
 	if ( ! isSelected && interactive ) {
 		// We only want to change this when the block is not selected, because changing it when
@@ -97,9 +106,21 @@ export default function ResizableEmbedPreview( {
 		) : (
 			<div
 				className="wp-block-embed__wrapper"
-				ref={ ( node ) => {
-					containerRef.current = node;
-					setResizeObserved( node );
+				ref={ setRefs }
+				style={ {
+					...( resizeDelta
+						? {
+								width: `${
+									pixelSize.width + resizeDelta.width
+								}px`,
+								height: `${
+									pixelSize.height + resizeDelta.height
+								}px`,
+						  }
+						: {
+								width: attributes.width || undefined,
+								height: attributes.height || undefined,
+						  } ),
 				} }
 			>
 				<SandBox
@@ -148,89 +169,104 @@ export default function ResizableEmbedPreview( {
 		</>
 	);
 
-	// Calculate current size with delta for real-time feedback
-	const currentSize = resizeDelta
-		? {
-				width: pixelSize.width + resizeDelta.width,
-				height: pixelSize.height + resizeDelta.height,
-		  }
-		: pixelSize;
-
-	// Wrap embed content with resize container
-	const embedContent = (
-		<div
-			style={ {
-				width: currentSize.width
-					? `${ currentSize.width }px`
-					: undefined,
-				transition: resizeDelta ? 'none' : 'width 0.1s ease',
-			} }
-		>
-			{ embedPreview }
-		</div>
-	);
-
-	// Show resizable box only when selected and previewable
+	// Show resizable box only when selected and previewable - similar to image block
 	let resizableBox;
 	if ( isSelected && previewable ) {
-		// Calculate current dimensions
-		const numericWidth = attributes.width
-			? parseInt( attributes.width, 10 )
-			: null;
+		// Calculate current dimensions - following image block pattern
 		const customRatio = pixelSize.width / pixelSize.height;
 		const naturalRatio =
 			preview.width && preview.height
 				? preview.width / preview.height
 				: aspectRatio;
-		const ratio = numericWidth
-			? customRatio || naturalRatio || aspectRatio
-			: naturalRatio || aspectRatio;
+		const ratio = customRatio || naturalRatio || aspectRatio;
+
+		// Min and max dimensions
+		const minWidth = 50;
+		const minHeight = 50 / ratio;
+		const maxResizeWidth = 1200; // Reasonable max width
+
+		// Determine which resize handles to show based on alignment - exactly like image block
+		const { align } = attributes;
+		let showRightHandle = false;
+		let showLeftHandle = false;
+
+		/* eslint-disable no-lonely-if */
+		// See https://github.com/WordPress/gutenberg/issues/7584.
+		if ( align === 'center' ) {
+			// When the embed is centered, show both handles.
+			showRightHandle = true;
+			showLeftHandle = true;
+		} else if ( isRTL() ) {
+			// In RTL mode the embed is on the right by default.
+			// Show the right handle and hide the left handle only when it is
+			// aligned left. Otherwise always show the left handle.
+			if ( align === 'left' ) {
+				showRightHandle = true;
+			} else {
+				showLeftHandle = true;
+			}
+		} else {
+			// Show the left handle and hide the right handle only when the
+			// embed is aligned right. Otherwise always show the right handle.
+			if ( align === 'right' ) {
+				showLeftHandle = true;
+			} else {
+				showRightHandle = true;
+			}
+		}
+		/* eslint-enable no-lonely-if */
 
 		resizableBox = (
 			<ResizableBox
+				ref={ effectResizeableBoxPlacement }
 				style={ {
 					position: 'absolute',
-					inset: '0 0 0 0',
+					// To match the vertical-align: bottom of the embed (similar to image)
+					// syncs the top with the embed. This matters when the embed height is
+					// less than the line-height.
+					inset: `${ offsetTop }px 0 0 0`,
 				} }
 				size={ pixelSize }
-				minWidth={ 50 }
+				minWidth={ minWidth }
+				maxWidth={ maxResizeWidth }
+				minHeight={ minHeight }
+				maxHeight={ maxResizeWidth / ratio }
 				lockAspectRatio={ ratio }
 				enable={ {
 					top: false,
-					right: true,
-					bottom: false,
-					left: false,
+					right: showRightHandle,
+					bottom: true,
+					left: showLeftHandle,
 				} }
 				onResizeStart={ () => {
 					toggleSelection( false );
 				} }
 				onResize={ ( event, direction, elt, delta ) => {
 					setResizeDelta( delta );
-					// Don't update pixelSize here - let ResizableBox handle it
 				} }
 				onResizeStop={ ( event, direction, elt, delta ) => {
 					toggleSelection( true );
 					setResizeDelta( null );
+					setPixelSize( ( current ) => ( {
+						width: current.width + delta.width,
+						height: current.height + delta.height,
+					} ) );
 
-					// Update pixelSize only after resize is complete
-					const newPixelSize = {
-						width: pixelSize.width + delta.width,
-						height: pixelSize.height + delta.height,
-					};
-					setPixelSize( newPixelSize );
-
-					// Set the final width
+					// Set the final width and height - similar to image block
 					setAttributes( {
-						width: `${ newPixelSize.width }px`,
-						height: undefined, // Let CSS maintain aspect ratio
+						width: `${ elt.offsetWidth }px`,
+						height: 'auto', // Let CSS maintain aspect ratio
 					} );
 				} }
-				showHandle
-			>
-				{ embedContent }
-			</ResizableBox>
+				resizeRatio={ align === 'center' ? 2 : 1 }
+			/>
 		);
 	}
 
-	return isSelected && previewable ? resizableBox : embedContent;
+	return (
+		<div style={ { position: 'relative' } }>
+			{ embedPreview }
+			{ resizableBox }
+		</div>
+	);
 }
