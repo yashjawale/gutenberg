@@ -1,5 +1,9 @@
 export { default as Icon } from './icon';
 
+export { default as accordion } from './library/accordion';
+export { default as accordionHeader } from './library/accordion-header';
+export { default as accordionItem } from './library/accordion-item';
+export { default as accordionPanel } from './library/accordion-panel';
 export { default as addCard } from './library/add-card';
 export { default as addSubmenu } from './library/add-submenu';
 export { default as addTemplate } from './library/add-template';
@@ -182,7 +186,6 @@ export { default as menu } from './library/menu';
 export { default as mobile } from './library/mobile';
 export { default as more } from './library/more';
 export { default as moreHorizontal } from './library/more-horizontal';
-export { default as moreHorizontalMobile } from './library/more-horizontal-mobile';
 export { default as moreVertical } from './library/more-vertical';
 export { default as moveTo } from './library/move-to';
 export { default as navigation } from './library/navigation';
