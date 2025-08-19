@@ -13,9 +13,8 @@ import {
 	__experimentalConfirmDialog as ConfirmDialog,
 	Button,
 	DropdownMenu,
-	Tooltip,
 } from '@wordpress/components';
-import { Icon, check, published, moreVertical } from '@wordpress/icons';
+import { published, moreVertical, undo } from '@wordpress/icons';
 import { __, _x, sprintf } from '@wordpress/i18n';
 import { useSelect } from '@wordpress/data';
 import { store as blockEditorStore } from '@wordpress/block-editor';
@@ -296,33 +295,23 @@ const CommentBoard = ( { thread, onResolve, onEdit, onDelete, status } ) => {
 							) }
 						</HStack>
 					) }
-					{ status === 'approved' && (
-						<HStack
-							alignment="right"
-							justify="flex-end"
-							spacing="0"
-						>
-							{ 0 === thread?.parent && onResolve && (
-								<Button
-									label={ _x(
-										'Reopen',
-										'Mark resolved comment as unresolved'
-									) }
-									__next40pxDefaultSize
-									icon={ check }
-									onClick={ () => {
-										setActionState( 'reopen' );
-										setShowConfirmDialog( true );
-									} }
-									showTooltip
-								/>
-							) }
-							{ /* translators: tooltip for resolved comment */ }
-							<Tooltip text={ __( 'Resolved' ) }>
-								<Icon icon={ check } />
-							</Tooltip>
-						</HStack>
-					) }
+					{ status === 'approved' &&
+						0 === thread?.parent &&
+						onResolve && (
+							<Button
+								label={ _x(
+									'Reopen',
+									'Mark resolved comment as unresolved'
+								) }
+								__next40pxDefaultSize
+								icon={ undo }
+								onClick={ () => {
+									setActionState( 'reopen' );
+									setShowConfirmDialog( true );
+								} }
+								showTooltip
+							/>
+						) }
 				</span>
 			</HStack>
 			<HStack
