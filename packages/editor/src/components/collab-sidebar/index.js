@@ -118,7 +118,7 @@ function CollabSidebarContent( {
 	};
 
 	const onCommentResolve = async ( commentId, action = 'resolve' ) => {
-		const status = action === 'reopen' ? 'unapproved' : 'approved';
+		const status = action === 'reopen' ? 'hold' : 'approved';
 		const savedRecord = await saveEntityRecord( 'root', 'comment', {
 			id: commentId,
 			status,
