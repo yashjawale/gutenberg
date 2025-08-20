@@ -25,7 +25,7 @@ import { Comments } from './comments';
 import { AddComment } from './add-comment';
 import { store as editorStore } from '../../store';
 import AddCommentButton from './comment-button';
-import AddCommentToolbarButton from './comment-button-toolbar';
+import CommentAvatarIndicator from './comment-indicator-toolbar';
 import { useGlobalStylesContext } from '../global-styles-provider';
 import { getCommentIdsFromBlocks } from './utils';
 
@@ -332,7 +332,7 @@ export default function CollabSidebar() {
 	}
 
 	const AddCommentComponent = blockCommentId
-		? AddCommentToolbarButton
+		? CommentAvatarIndicator
 		: AddCommentButton;
 
 	return (
