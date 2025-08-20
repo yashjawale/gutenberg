@@ -19,7 +19,7 @@ import { store as editorStore } from '../../store';
 const { CommentIconToolbarSlotFill } = unlock( blockEditorPrivateApis );
 
 const CommentAvatarIndicator = ( { onClick } ) => {
-	const { commenters, hasUnresolved } = useSelect( ( select ) => {
+	const { threadParticipants, hasUnresolved } = useSelect( ( select ) => {
 		const { getBlockAttributes, getSelectedBlockClientId } =
 			select( blockEditorStore );
 		const { getCurrentPostId } = select( editorStore );
@@ -31,7 +31,7 @@ const CommentAvatarIndicator = ( { onClick } ) => {
 
 		// Get comment data for this block
 		const blockCommentIdValue = selectedBlockAttributes?.blockCommentId;
-		const commentersMap = new Map();
+		const participantsMap = new Map();
 		let unresolvedCount = 0;
 
 		if ( blockCommentIdValue && postId ) {
@@ -47,22 +47,35 @@ const CommentAvatarIndicator = ( { onClick } ) => {
 			);
 
 			if ( comments ) {
-				// Get all comments in this thread (main + replies)
+				// Get all comments in this thread
+				// Main comment has id === blockCommentIdValue
+				// Replies have parent === blockCommentIdValue
 				const threadComments = comments.filter(
 					( comment ) =>
 						comment.id === blockCommentIdValue ||
 						comment.parent === blockCommentIdValue
 				);
 
+				// Sort by date to show participants in chronological order
+				threadComments.sort(
+					( a, b ) => new Date( a.date ) - new Date( b.date )
+				);
+
 				threadComments.forEach( ( comment ) => {
-					// Track unique commenters
+					// Track thread participants (original commenter + repliers)
 					if ( comment.author_name && comment.author_avatar_urls ) {
-						commentersMap.set( comment.author, {
-							name: comment.author_name,
-							avatar:
-								comment.author_avatar_urls?.[ '48' ] ||
-								comment.author_avatar_urls?.[ '96' ],
-						} );
+						const authorKey = `${ comment.author }-${ comment.author_name }`;
+						if ( ! participantsMap.has( authorKey ) ) {
+							participantsMap.set( authorKey, {
+								name: comment.author_name,
+								avatar:
+									comment.author_avatar_urls?.[ '48' ] ||
+									comment.author_avatar_urls?.[ '96' ],
+								isOriginalCommenter:
+									comment.id === blockCommentIdValue,
+								date: comment.date,
+							} );
+						}
 					}
 
 					// Count unresolved comments
@@ -73,13 +86,16 @@ const CommentAvatarIndicator = ( { onClick } ) => {
 			}
 		}
 
+		// Convert to array and maintain chronological order
+		const participants = Array.from( participantsMap.values() );
+
 		return {
-			commenters: Array.from( commentersMap.values() ),
+			threadParticipants: participants,
 			hasUnresolved: unresolvedCount > 0,
 		};
 	}, [] );
 
-	if ( ! commenters.length ) {
+	if ( ! threadParticipants.length ) {
 		return null;
 	}
 
@@ -92,8 +108,8 @@ const CommentAvatarIndicator = ( { onClick } ) => {
 
 	// Show up to 3 avatars, with overflow indicator
 	const maxAvatars = 3;
-	const visibleCommenters = commenters.slice( 0, maxAvatars );
-	const overflowCount = Math.max( 0, commenters.length - maxAvatars );
+	const visibleParticipants = threadParticipants.slice( 0, maxAvatars );
+	const overflowCount = Math.max( 0, threadParticipants.length - maxAvatars );
 
 	return (
 		<CommentIconToolbarSlotFill.Fill>
@@ -106,19 +122,29 @@ const CommentAvatarIndicator = ( { onClick } ) => {
 				showTooltip
 			>
 				<div className="comment-avatar-stack">
-					{ visibleCommenters.map( ( commenter, index ) => (
+					{ visibleParticipants.map( ( participant, index ) => (
 						<img
-							key={ commenter.name + index }
-							src={ commenter.avatar }
-							alt={ commenter.name }
-							className="comment-avatar"
+							key={ participant.name + index }
+							src={ participant.avatar }
+							alt={ participant.name }
+							className={ `comment-avatar ${
+								participant.isOriginalCommenter
+									? 'is-original-commenter'
+									: 'is-replier'
+							}` }
 							style={ { zIndex: maxAvatars - index } }
+							title={
+								participant.isOriginalCommenter
+									? `${ participant.name } (started thread)`
+									: `${ participant.name } (replied)`
+							}
 						/>
 					) ) }
 					{ overflowCount > 0 && (
 						<div
 							className="comment-avatar-overflow"
 							style={ { zIndex: 0 } }
+							title={ `+${ overflowCount } more participants` }
 						>
 							+{ overflowCount }
 						</div>

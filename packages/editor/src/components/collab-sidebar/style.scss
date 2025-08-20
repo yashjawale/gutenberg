@@ -182,6 +182,16 @@
 	&:first-child {
 		margin-left: 0;
 	}
+
+	// Distinguish original commenter with a subtle blue border
+	&.is-original-commenter {
+		border-color: #3858e9;
+	}
+
+	// Repliers keep white border
+	&.is-replier {
+		border-color: $white;
+	}
 }
 
 .comment-avatar-overflow {
