@@ -32,7 +32,7 @@ const CommentAvatarIndicator = ( { onClick } ) => {
 		// Get comment data for this block
 		const blockCommentIdValue = selectedBlockAttributes?.blockCommentId;
 		const participantsMap = new Map();
-		let unresolvedCount = 0;
+		let isResolved = false;
 
 		if ( blockCommentIdValue && postId ) {
 			const comments = select( coreStore ).getEntityRecords(
@@ -61,6 +61,16 @@ const CommentAvatarIndicator = ( { onClick } ) => {
 					( a, b ) => new Date( a.date ) - new Date( b.date )
 				);
 
+				// Find the main thread comment (first comment)
+				const mainComment = threadComments.find(
+					( comment ) => comment.id === blockCommentIdValue
+				);
+
+				// Thread is resolved if the main comment is approved
+				if ( mainComment ) {
+					isResolved = mainComment.status === 'approved';
+				}
+
 				threadComments.forEach( ( comment ) => {
 					// Track thread participants (original commenter + repliers)
 					if ( comment.author_name && comment.author_avatar_urls ) {
@@ -77,11 +87,6 @@ const CommentAvatarIndicator = ( { onClick } ) => {
 							} );
 						}
 					}
-
-					// Count unresolved comments
-					if ( comment.status !== 'approved' ) {
-						unresolvedCount++;
-					}
 				} );
 			}
 		}
@@ -91,20 +96,13 @@ const CommentAvatarIndicator = ( { onClick } ) => {
 
 		return {
 			threadParticipants: participants,
-			hasUnresolved: unresolvedCount > 0,
+			hasUnresolved: ! isResolved,
 		};
 	}, [] );
 
 	if ( ! threadParticipants.length ) {
 		return null;
 	}
-
-	const buttonLabel = hasUnresolved
-		? _x(
-				'View unresolved comments',
-				'View comment thread with unresolved comments'
-		  )
-		: _x( 'View resolved comments', 'View resolved comment thread' );
 
 	// Show up to 3 avatars, with overflow indicator
 	const maxAvatars = 3;
@@ -117,7 +115,7 @@ const CommentAvatarIndicator = ( { onClick } ) => {
 				className={ `comment-avatar-indicator ${
 					hasUnresolved ? 'has-unresolved' : 'all-resolved'
 				}` }
-				label={ buttonLabel }
+				label={ _x( 'View comments', 'View comment thread' ) }
 				onClick={ onClick }
 				showTooltip
 			>
