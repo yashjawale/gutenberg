@@ -13,8 +13,9 @@ import {
 	__experimentalConfirmDialog as ConfirmDialog,
 	Button,
 	DropdownMenu,
+	Tooltip,
 } from '@wordpress/components';
-import { published, moreVertical, undo } from '@wordpress/icons';
+import { published, moreVertical, Icon, check } from '@wordpress/icons';
 import { __, _x, sprintf } from '@wordpress/i18n';
 import { useSelect } from '@wordpress/data';
 import { store as blockEditorStore } from '@wordpress/block-editor';
@@ -247,12 +248,13 @@ const CommentBoard = ( {
 	};
 
 	const actions = [
-		onEdit && {
-			title: _x( 'Edit', 'Edit comment' ),
-			onClick: () => {
-				setActionState( 'edit' );
+		onEdit &&
+			status !== 'approved' && {
+				title: _x( 'Edit', 'Edit comment' ),
+				onClick: () => {
+					setActionState( 'edit' );
+				},
 			},
-		},
 		onDelete && {
 			title: _x( 'Delete', 'Delete comment' ),
 			onClick: () => {
@@ -260,6 +262,14 @@ const CommentBoard = ( {
 				setShowConfirmDialog( true );
 			},
 		},
+		onReopen &&
+			status === 'approved' && {
+				title: _x( 'Reopen', 'Reopen comment' ),
+				onClick: () => {
+					setActionState( 'reopen' );
+					setShowConfirmDialog( true );
+				},
+			},
 	];
 
 	const moreActions = actions.filter( ( item ) => item?.onClick );
@@ -273,13 +283,10 @@ const CommentBoard = ( {
 					date={ thread?.date }
 				/>
 				<span className="editor-collab-sidebar-panel__comment-status">
-					{ status !== 'approved' && (
-						<HStack
-							alignment="right"
-							justify="flex-end"
-							spacing="0"
-						>
-							{ 0 === thread?.parent && onResolve && (
+					<HStack alignment="right" justify="flex-end" spacing="0">
+						{ 0 === thread?.parent &&
+							status !== 'approved' &&
+							onResolve && (
 								<Button
 									label={ _x(
 										'Resolve',
@@ -294,36 +301,24 @@ const CommentBoard = ( {
 									showTooltip
 								/>
 							) }
-							{ 0 < moreActions.length && (
-								<DropdownMenu
-									icon={ moreVertical }
-									label={ _x(
-										'Select an action',
-										'Select comment action'
-									) }
-									className="editor-collab-sidebar-panel__comment-dropdown-menu"
-									controls={ moreActions }
-								/>
-							) }
-						</HStack>
-					) }
-					{ status === 'approved' &&
-						0 === thread?.parent &&
-						onResolve && (
-							<Button
+						{ status === 'approved' && (
+							// translators: tooltip for resolved comment
+							<Tooltip text={ __( 'Resolved' ) }>
+								<Icon icon={ check } />
+							</Tooltip>
+						) }
+						{ 0 < moreActions.length && (
+							<DropdownMenu
+								icon={ moreVertical }
 								label={ _x(
-									'Reopen',
-									'Mark resolved comment as unresolved'
+									'Select an action',
+									'Select comment action'
 								) }
-								__next40pxDefaultSize
-								icon={ undo }
-								onClick={ () => {
-									setActionState( 'reopen' );
-									setShowConfirmDialog( true );
-								} }
-								showTooltip
+								className="editor-collab-sidebar-panel__comment-dropdown-menu"
+								controls={ moreActions }
 							/>
 						) }
+					</HStack>
 				</span>
 			</HStack>
 			<HStack
