@@ -25,6 +25,7 @@ import { store as blockEditorStore } from '@wordpress/block-editor';
  */
 import CommentAuthorInfo from './comment-author-info';
 import CommentForm from './comment-form';
+import CommentQuickReply from './comment-quick-reply';
 
 /**
  * Renders the Comments component.
@@ -180,6 +181,14 @@ function Thread( {
 							</VStack>
 						) ) }
 				</>
+			) }
+			{ 'approved' === thread.status && isFocused && (
+				<CommentQuickReply
+					onSubmit={ ( inputComment ) => {
+						onCommentReopen( thread.id );
+						onAddReply( inputComment, thread.id );
+					} }
+				/>
 			) }
 			{ 'approved' !== thread.status && isFocused && (
 				<VStack
