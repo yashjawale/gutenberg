@@ -254,8 +254,7 @@ const CommentBoard = ( {
 			status === 'approved' && {
 				title: _x( 'Reopen', 'Reopen comment' ),
 				onClick: () => {
-					setActionState( 'reopen' );
-					setShowConfirmDialog( true );
+					onReopen( thread.id );
 				},
 			},
 	];
@@ -283,8 +282,7 @@ const CommentBoard = ( {
 									__next40pxDefaultSize
 									icon={ published }
 									onClick={ () => {
-										setActionState( 'resolve' );
-										setShowConfirmDialog( true );
+										onResolve( thread.id );
 									} }
 									showTooltip
 								/>
