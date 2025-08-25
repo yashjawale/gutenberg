@@ -148,7 +148,7 @@ function CollabSidebarContent( {
 			createNotice(
 				'snackbar',
 				// translators: Comment reopened successfully
-				__( 'Comment reopened successfully.' ),
+				__( 'Comment reopened.' ),
 				{
 					type: 'snackbar',
 					isDismissible: true,
