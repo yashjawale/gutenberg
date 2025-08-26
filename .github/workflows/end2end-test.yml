@@ -132,9 +132,8 @@ jobs:
             - name: Setup Node.js and install dependencies
               uses: ./.github/setup-node
 
-            - name: Npm build
-              # TODO: We don't have to build the entire project, just the action itself.
-              run: npm run build:packages
+            - name: Build report flaky tests package
+              run: node bin/packages/build.js packages/report-flaky-tests/src/**/*.ts
 
             - name: Report flaky tests
               uses: ./packages/report-flaky-tests
