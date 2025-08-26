@@ -146,7 +146,11 @@ export const CustomEmpty = () => {
 	);
 };
 
-export const MinimalUI = () => {
+const MinimalUIComponent = ( {
+	layout = 'table',
+}: {
+	layout: 'table' | 'list' | 'grid';
+} ) => {
 	const [ view, setView ] = useState< View >( {
 		...DEFAULT_VIEW,
 		fields: [ 'title', 'description', 'categories' ],
@@ -165,6 +169,13 @@ export const MinimalUI = () => {
 		filterBy: false,
 	} ) );
 
+	useEffect( () => {
+		setView( {
+			...view,
+			type: layout as any,
+		} );
+	}, [ layout ] );
+
 	return (
 		<DataViews
 			getItemId={ ( item ) => item.id.toString() }
@@ -172,14 +183,23 @@ export const MinimalUI = () => {
 			data={ shownData }
 			view={ view }
 			fields={ _fields }
-			config={ false }
-			search={ false }
 			onChangeView={ setView }
-			defaultLayouts={ {
-				table: {},
-			} }
-		/>
+			defaultLayouts={ { [ layout ]: {} } }
+		>
+			<DataViews.Layout />
+			<DataViews.Footer />
+		</DataViews>
 	);
+};
+export const MinimalUI = {
+	render: MinimalUIComponent,
+	argTypes: {
+		layout: {
+			control: 'select',
+			options: [ 'table', 'list', 'grid' ],
+			defaultValue: 'table',
+		},
+	},
 };
 
 /**
