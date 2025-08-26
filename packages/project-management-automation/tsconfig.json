@@ -6,11 +6,11 @@
 		"module": "commonjs",
 		"lib": [ "es2020" ],
 		"outDir": "./build",
-		"rootDir": "./lib",
+		"rootDir": "src",
 		"types": [ "node" ],
 		"checkJs": false,
 		"emitDeclarationOnly": false
 	},
-	"include": [ "lib" ],
+	"include": [ "src" ],
 	"exclude": [ "**/*.test.*", "**/test/**" ]
 }
