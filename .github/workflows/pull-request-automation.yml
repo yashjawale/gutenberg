@@ -37,7 +37,6 @@ jobs:
                   shopt -s globstar
                   files=(packages/project-management-automation/src/**/*.ts)
                   node bin/packages/build.js "${files[@]}"
-              shell: bash
 
             - uses: ./packages/project-management-automation
               with:
