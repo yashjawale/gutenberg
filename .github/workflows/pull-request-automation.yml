@@ -15,7 +15,7 @@ jobs:
             contents: read
             issues: write
             pull-requests: write
-        if: ${{ github.repository == 'WordPress/gutenberg' }}
+        if: ${{ github.repository == 'yashjawale/gutenberg' }}
 
         steps:
             # Checkout defaults to using the branch which triggered the event, which
