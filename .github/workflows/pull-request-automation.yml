@@ -22,7 +22,7 @@ jobs:
             # isn't necessarily `trunk` (e.g. in the case of a merge).
             - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
               with:
-                  ref: trunk
+                  ref: ${{ github.head_ref }} # TEMP: checkout the PR branch
                   show-progress: ${{ runner.debug == '1' && 'true' || 'false' }}
                   persist-credentials: false
 
@@ -33,18 +33,7 @@ jobs:
               uses: ./.github/setup-node
 
             - name: Build project management automation package
-              run: |
-                  shopt -s globstar
-                  files=(packages/project-management-automation/src/**/*.ts)
-
-                  # Only run the build if files were found
-                  if [ -e "${files[0]}" ]; then
-                  echo "Found ${#files[@]} files to build."
-                  node bin/packages/build.js "${files[@]}"
-                  else
-                  echo "No TypeScript files found to build. Skipping."
-                  fi
-              shell: bash
+              run: node bin/packages/build.js packages/project-management-automation/src/**/*.ts
 
             - uses: ./packages/project-management-automation
               with:
