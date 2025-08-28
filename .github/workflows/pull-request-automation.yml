@@ -32,7 +32,9 @@ jobs:
             - name: Build project management automation package
               run: |
                   shopt -s globstar
-                  node bin/packages/build.js packages/project-management-automation/src/**/*.ts
+                  files=(packages/project-management-automation/src/**/*.ts)
+                  node bin/packages/build.js "${files[@]}"
+              shell: bash
 
             - uses: ./packages/project-management-automation
               with:
