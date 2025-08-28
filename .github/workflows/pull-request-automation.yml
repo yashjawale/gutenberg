@@ -27,7 +27,7 @@ jobs:
                   persist-credentials: false
 
             - name: Verify file structure
-              run: ls -R
+              run: ls packages/project-management-automation -R
 
             - name: Setup Node.js and install dependencies
               uses: ./.github/setup-node
