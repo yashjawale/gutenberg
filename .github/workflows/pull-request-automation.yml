@@ -33,7 +33,14 @@ jobs:
               run: |
                   shopt -s globstar
                   files=(packages/project-management-automation/src/**/*.ts)
+
+                  # Only run the build if files were found
+                  if [ -e "${files[0]}" ]; then
+                  echo "Found ${#files[@]} files to build."
                   node bin/packages/build.js "${files[@]}"
+                  else
+                  echo "No TypeScript files found to build. Skipping."
+                  fi
               shell: bash
 
             - uses: ./packages/project-management-automation
