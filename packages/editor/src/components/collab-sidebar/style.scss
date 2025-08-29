@@ -193,9 +193,10 @@
 }
 
 .comment-avatar-overflow {
-	width: 24px;
+	width: fit-content;
 	height: 24px;
-	border-radius: 50%;
+	border-radius: 4rem;
+	padding: 0 4px;
 	background: #757575;
 	color: $white;
 	border: 2px solid $white;
