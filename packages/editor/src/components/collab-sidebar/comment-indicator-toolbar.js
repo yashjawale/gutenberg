@@ -51,11 +51,9 @@ const CommentAvatarIndicator = ( { onClick } ) => {
 				);
 
 				// Check if there are more pages available
-				const totalPages = select( coreStore ).getEntityTotalPages(
-					'root',
-					'comment',
-					queryArgs
-				);
+				const totalPages = select(
+					coreStore
+				).getEntityRecordsTotalPages( 'root', 'comment', queryArgs );
 
 				// If we have more than 1 page, there are more comments
 				if ( totalPages && totalPages > 1 ) {
