@@ -43,9 +43,10 @@
 	margin: 0;
 }
 
-// Prevent block spacing from affecting closed panels.
-:where(.wp-block-accordion-panel:not(.is-open)) {
-	margin: 0;
+// Override block spacing for closed accordion panels specifically.
+// Higher specificity to ensure it overrides block spacing margins.
+.wp-block-accordion-content:not(.is-open) > * + .wp-block-accordion-panel {
+	margin-block-start: 0 !important;
 }
 
 .accordion-panel__wrapper {
