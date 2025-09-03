@@ -45,10 +45,10 @@
 	overflow: hidden;
 }
 
-// Override block spacing for closed accordion panels specifically.
-// Higher specificity to ensure it overrides block spacing margins.
-.wp-block-accordion-content:not(.is-open) > * + .wp-block-accordion-panel {
-	margin-block-start: 0 !important;
+// Prevent blockGap from Accordion Content block from adding extra margin between accordions.
+.wp-block-accordion-panel[inert],
+.wp-block-accordion-panel[aria-hidden="true"] {
+	margin-block-start: 0;
 }
 
 .accordion-panel__wrapper {
