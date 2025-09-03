@@ -7,6 +7,7 @@ import {
 	useInnerBlocksProps,
 	InspectorControls,
 	store as blockEditorStore,
+	__experimentalGetSpacingClassesAndStyles as useSpacingProps,
 } from '@wordpress/block-editor';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useEffect } from '@wordpress/element';
@@ -25,12 +26,10 @@ import clsx from 'clsx';
  */
 import { useToolsPanelDropdownMenuProps } from '../utils/hooks';
 
-export default function Edit( {
-	attributes: { openByDefault },
-	clientId,
-	setAttributes,
-} ) {
+export default function Edit( { attributes, clientId, setAttributes } ) {
+	const { openByDefault } = attributes;
 	const dropdownMenuProps = useToolsPanelDropdownMenuProps();
+	const spacingProps = useSpacingProps( attributes );
 
 	const { isSelected, getBlockOrder } = useSelect(
 		( select ) => {
@@ -74,6 +73,10 @@ export default function Edit( {
 			className: clsx( blockProps.className, {
 				'is-open': openByDefault || isSelected,
 			} ),
+			style: {
+				...blockProps.style,
+				...spacingProps.style,
+			},
 		},
 		{
 			template: [
