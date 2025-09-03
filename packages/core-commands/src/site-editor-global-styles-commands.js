@@ -7,7 +7,7 @@ import { useMemo } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
 import { store as coreStore } from '@wordpress/core-data';
 import { getPath, addQueryArgs } from '@wordpress/url';
-import { styles, brush, backup, external } from '@wordpress/icons';
+import { styles, external } from '@wordpress/icons';
 import { privateApis as routerPrivateApis } from '@wordpress/router';
 
 /**
@@ -24,36 +24,20 @@ const getGlobalStylesNavigationCommands = () =>
 			'site-editor.php'
 		);
 
-		const {
-			isBlockBasedTheme,
-			canCreateTemplate,
-			canEditCSS,
-			hasRevisions,
-		} = useSelect( ( select ) => {
-			const {
-				getCurrentTheme,
-				canUser,
-				getEntityRecord,
-				__experimentalGetCurrentGlobalStylesId,
-			} = select( coreStore );
+		const { isBlockBasedTheme, canCreateTemplate } = useSelect(
+			( select ) => {
+				const { getCurrentTheme, canUser } = select( coreStore );
 
-			const globalStylesId = __experimentalGetCurrentGlobalStylesId();
-			const globalStyles = globalStylesId
-				? getEntityRecord( 'root', 'globalStyles', globalStylesId )
-				: undefined;
-
-			return {
-				isBlockBasedTheme: getCurrentTheme()?.is_block_theme,
-				canCreateTemplate: canUser( 'create', {
-					kind: 'postType',
-					name: 'wp_template',
-				} ),
-				canEditCSS: !! globalStyles?._links?.[ 'wp:action-edit-css' ],
-				hasRevisions:
-					!! globalStyles?._links?.[ 'version-history' ]?.[ 0 ]
-						?.count,
-			};
-		}, [] );
+				return {
+					isBlockBasedTheme: getCurrentTheme()?.is_block_theme,
+					canCreateTemplate: canUser( 'create', {
+						kind: 'postType',
+						name: 'wp_template',
+					} ),
+				};
+			},
+			[]
+		);
 
 		const commands = useMemo( () => {
 			// Only show site editor commands to users who can access it and in block themes
@@ -80,67 +64,8 @@ const getGlobalStylesNavigationCommands = () =>
 				},
 			} );
 
-			// Go to custom CSS command
-			if ( canEditCSS ) {
-				result.push( {
-					name: 'core/go-to-custom-css',
-					label: __( 'Go to custom CSS' ),
-					icon: brush,
-					callback: ( { close } ) => {
-						close();
-						if ( isSiteEditor ) {
-							history.navigate(
-								'/styles?canvas=edit&section=css'
-							);
-						} else {
-							document.location = addQueryArgs(
-								'site-editor.php',
-								{
-									p: '/styles',
-									canvas: 'edit',
-									section: 'css',
-								}
-							);
-						}
-					},
-				} );
-			}
-
-			// Open style revisions command
-			if ( hasRevisions ) {
-				result.push( {
-					name: 'core/open-style-revisions',
-					label: __( 'Open style revisions' ),
-					icon: backup,
-					callback: ( { close } ) => {
-						close();
-						if ( isSiteEditor ) {
-							history.navigate(
-								'/styles?canvas=edit&section=revisions'
-							);
-						} else {
-							document.location = addQueryArgs(
-								'site-editor.php',
-								{
-									p: '/styles',
-									canvas: 'edit',
-									section: 'revisions',
-								}
-							);
-						}
-					},
-				} );
-			}
-
 			return result;
-		}, [
-			canCreateTemplate,
-			isBlockBasedTheme,
-			canEditCSS,
-			hasRevisions,
-			history,
-			isSiteEditor,
-		] );
+		}, [ canCreateTemplate, isBlockBasedTheme, history, isSiteEditor ] );
 
 		return {
 			isLoading: false,
