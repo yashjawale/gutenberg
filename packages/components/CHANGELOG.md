@@ -6,6 +6,9 @@
 
 -   `Tabs`: Ensure font size inheritance for tab buttons in all contexts ([#71346](https://github.com/WordPress/gutenberg/pull/71346)).
 
+### Internal
+
+-   Upgrade `framer-motion` package to version `^11.15.0` ([#71442](https://github.com/WordPress/gutenberg/pull/71442)).
 
 ## 30.2.0 (2025-08-20)
 
