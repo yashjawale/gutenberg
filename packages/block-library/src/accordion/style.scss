@@ -43,6 +43,11 @@
 	margin: 0;
 }
 
+// Prevent block spacing from affecting closed panels.
+.wp-block-accordion-panel:not(.is-open) {
+	margin: 0;
+}
+
 .accordion-panel__wrapper {
 	padding-bottom: var(--wp--preset--spacing--20, 1em);
 }
