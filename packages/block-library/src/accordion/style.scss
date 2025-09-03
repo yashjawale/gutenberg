@@ -44,7 +44,7 @@
 }
 
 // Prevent block spacing from affecting closed panels.
-.wp-block-accordion-panel:not(.is-open) {
+:where(.wp-block-accordion-panel:not(.is-open)) {
 	margin: 0;
 }
 
