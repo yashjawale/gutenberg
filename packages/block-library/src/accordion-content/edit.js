@@ -7,7 +7,6 @@ import {
 	useInnerBlocksProps,
 	InspectorControls,
 	store as blockEditorStore,
-	__experimentalGetSpacingClassesAndStyles as useSpacingProps,
 } from '@wordpress/block-editor';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useEffect } from '@wordpress/element';
@@ -29,7 +28,6 @@ import { useToolsPanelDropdownMenuProps } from '../utils/hooks';
 export default function Edit( { attributes, clientId, setAttributes } ) {
 	const { openByDefault } = attributes;
 	const dropdownMenuProps = useToolsPanelDropdownMenuProps();
-	const spacingProps = useSpacingProps( attributes );
 
 	const { isSelected, getBlockOrder } = useSelect(
 		( select ) => {
@@ -66,33 +64,26 @@ export default function Edit( { attributes, clientId, setAttributes } ) {
 		updateBlockAttributes,
 	] );
 
-	const blockProps = useBlockProps();
-	const innerBlocksProps = useInnerBlocksProps(
-		{
-			...blockProps,
-			className: clsx( blockProps.className, {
-				'is-open': openByDefault || isSelected,
-			} ),
-			style: {
-				...blockProps.style,
-				...spacingProps.style,
-			},
-		},
-		{
-			template: [
-				[ 'core/accordion-header', {} ],
-				[
-					'core/accordion-panel',
-					{
-						openByDefault,
-					},
-				],
+	const blockProps = useBlockProps( {
+		className: clsx( {
+			'is-open': openByDefault || isSelected,
+		} ),
+	} );
+
+	const innerBlocksProps = useInnerBlocksProps( blockProps, {
+		template: [
+			[ 'core/accordion-header', {} ],
+			[
+				'core/accordion-panel',
+				{
+					openByDefault,
+				},
 			],
-			templateLock: 'all',
-			directInsert: true,
-			templateInsertUpdatesSelection: true,
-		}
-	);
+		],
+		templateLock: 'all',
+		directInsert: true,
+		templateInsertUpdatesSelection: true,
+	} );
 
 	return (
 		<>
