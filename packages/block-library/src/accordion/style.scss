@@ -13,11 +13,6 @@
 	}
 }
 
-:where(.accordion-content__heading) {
-	margin-block-start: 0;
-	margin-block-end: 0;
-}
-
 .accordion-content__toggle {
 	font-family: inherit;
 	font-size: inherit;
@@ -45,9 +40,9 @@
 	width: 100%;
 }
 
-:where(.is-layout-flow > .wp-block-accordion-panel, .wp-block-accordion-panel) {
+.is-layout-flow > .wp-block-accordion-panel,
+.wp-block-accordion-panel {
 	overflow: hidden;
-	margin: 0;
 }
 
 // Override block spacing for closed accordion panels specifically.
