@@ -70,6 +70,7 @@ import useEditPostCommands from '../../commands/use-commands';
 import { usePaddingAppender } from './use-padding-appender';
 import { useShouldIframe } from './use-should-iframe';
 import useNavigateToEntityRecord from '../../hooks/use-navigate-to-entity-record';
+import DocumentTitle from '../document-title';
 import { useMetaBoxInitialization } from '../meta-boxes/use-meta-box-initialization';
 
 const { getLayoutStyles } = unlock( blockEditorPrivateApis );
@@ -383,6 +384,7 @@ function Layout( {
 		initialPostType,
 		'post-only'
 	);
+
 	const isEditingTemplate = currentPostType === 'wp_template';
 	const {
 		mode,
@@ -616,6 +618,7 @@ function Layout( {
 						}
 					>
 						<PostLockedModal />
+						<DocumentTitle />
 						<EditorInitialization />
 						<FullscreenMode isActive={ isFullscreenActive } />
 						<BrowserURL />
