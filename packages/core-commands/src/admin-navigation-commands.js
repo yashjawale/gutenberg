@@ -3,7 +3,7 @@
  */
 import { useCommandLoader } from '@wordpress/commands';
 import { __ } from '@wordpress/i18n';
-import { plus, dashboard } from '@wordpress/icons';
+import { plus, dashboard, external } from '@wordpress/icons';
 import { getPath } from '@wordpress/url';
 import { store as coreStore } from '@wordpress/core-data';
 import { useSelect, useDispatch } from '@wordpress/data';
@@ -227,6 +227,40 @@ const getAddNewPostCommand = () =>
 		};
 	};
 
+const getViewSiteCommand = () =>
+	function useViewSiteCommand() {
+		const homeUrl = useSelect( ( select ) => {
+			// Site index.
+			return select( coreStore ).getEntityRecord(
+				'root',
+				'__unstableBase'
+			)?.home;
+		}, [] );
+
+		const commands = useMemo( () => {
+			if ( ! homeUrl ) {
+				return [];
+			}
+
+			return [
+				{
+					name: 'core/view-site',
+					label: __( 'View site' ),
+					icon: external,
+					callback: ( { close } ) => {
+						close();
+						window.open( homeUrl, '_blank' );
+					},
+				},
+			];
+		}, [ homeUrl ] );
+
+		return {
+			isLoading: false,
+			commands,
+		};
+	};
+
 export function useAdminNavigationCommands() {
 	useCommandLoader( {
 		name: 'core/add-new-post',
@@ -246,5 +280,10 @@ export function useAdminNavigationCommands() {
 	useCommandLoader( {
 		name: 'core/admin-navigation',
 		hook: getAdminBasicNavigationCommands(),
+	} );
+
+	useCommandLoader( {
+		name: 'core/view-site',
+		hook: getViewSiteCommand(),
 	} );
 }

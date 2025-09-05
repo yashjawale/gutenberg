@@ -10,7 +10,6 @@ import { CommandMenu } from '@wordpress/commands';
  */
 import { useAdminNavigationCommands } from './admin-navigation-commands';
 import { useSiteEditorNavigationCommands } from './site-editor-navigation-commands';
-import { useSiteEditorGlobalStylesCommands } from './site-editor-global-styles-commands';
 import { unlock } from './lock-unlock';
 export { privateApis } from './private-apis';
 
@@ -20,7 +19,6 @@ const { RouterProvider } = unlock( routerPrivateApis );
 function CommandPalette() {
 	useAdminNavigationCommands();
 	useSiteEditorNavigationCommands();
-	useSiteEditorGlobalStylesCommands();
 	return (
 		<RouterProvider pathArg="p">
 			<CommandMenu />
