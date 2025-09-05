@@ -50,7 +50,7 @@ const getGlobalStylesNavigationCommands = () =>
 			// Go to Styles command
 			result.push( {
 				name: 'core/go-to-styles',
-				label: __( 'Go to Styles' ),
+				label: __( 'Go to: Styles' ),
 				icon: styles,
 				callback: ( { close } ) => {
 					close();
