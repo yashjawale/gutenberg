@@ -418,62 +418,6 @@ const getSiteEditorBasicNavigationCommands = () =>
 		};
 	};
 
-const getGlobalStylesNavigationCommands = () =>
-	function useGlobalStylesNavigationCommands() {
-		const history = useHistory();
-		const isSiteEditor = getPath( window.location.href )?.includes(
-			'site-editor.php'
-		);
-
-		const { isBlockBasedTheme, canCreateTemplate } = useSelect(
-			( select ) => {
-				const { getCurrentTheme, canUser } = select( coreStore );
-
-				return {
-					isBlockBasedTheme: getCurrentTheme()?.is_block_theme,
-					canCreateTemplate: canUser( 'create', {
-						kind: 'postType',
-						name: 'wp_template',
-					} ),
-				};
-			},
-			[]
-		);
-
-		const commands = useMemo( () => {
-			// Only show site editor commands to users who can access it and in block themes
-			if ( ! canCreateTemplate || ! isBlockBasedTheme ) {
-				return [];
-			}
-
-			const result = [];
-
-			// Go to Styles command
-			result.push( {
-				name: 'core/go-to-styles',
-				label: __( 'Go to: Styles' ),
-				icon: styles,
-				callback: ( { close } ) => {
-					close();
-					if ( isSiteEditor ) {
-						history.navigate( '/styles' );
-					} else {
-						document.location = addQueryArgs( 'site-editor.php', {
-							p: '/styles',
-						} );
-					}
-				},
-			} );
-
-			return result;
-		}, [ canCreateTemplate, isBlockBasedTheme, history, isSiteEditor ] );
-
-		return {
-			isLoading: false,
-			commands,
-		};
-	};
-
 export function useSiteEditorNavigationCommands() {
 	useCommandLoader( {
 		name: 'core/edit-site/navigate-pages',
@@ -495,9 +439,5 @@ export function useSiteEditorNavigationCommands() {
 		name: 'core/edit-site/basic-navigation',
 		hook: getSiteEditorBasicNavigationCommands(),
 		context: 'site-editor',
-	} );
-	useCommandLoader( {
-		name: 'core/global-styles-navigation',
-		hook: getGlobalStylesNavigationCommands(),
 	} );
 }
