@@ -244,7 +244,7 @@ const getNavigationCommandLoaderPerTemplate = ( templateType ) =>
 			) {
 				result.push( {
 					name: 'core/edit-site/open-template-parts',
-					label: __( 'Go to Template parts' ),
+					label: __( 'Go to: Template parts' ),
 					icon: symbolFilled,
 					callback: ( { close } ) => {
 						if ( isSiteEditor ) {
@@ -302,7 +302,7 @@ const getSiteEditorBasicNavigationCommands = () =>
 				// Go to Styles command
 				result.push( {
 					name: 'core/edit-site/open-styles',
-					label: __( 'Go to Styles' ),
+					label: __( 'Go to: Styles' ),
 					icon: styles,
 					callback: ( { close } ) => {
 						if ( isSiteEditor ) {
@@ -321,7 +321,7 @@ const getSiteEditorBasicNavigationCommands = () =>
 
 				result.push( {
 					name: 'core/edit-site/open-navigation',
-					label: __( 'Go to Navigation' ),
+					label: __( 'Go to: Navigation' ),
 					icon: navigation,
 					callback: ( { close } ) => {
 						if ( isSiteEditor ) {
@@ -340,7 +340,7 @@ const getSiteEditorBasicNavigationCommands = () =>
 
 				result.push( {
 					name: 'core/edit-site/open-pages',
-					label: __( 'Go to Pages' ),
+					label: __( 'Go to: Pages' ),
 					icon: page,
 					callback: ( { close } ) => {
 						if ( isSiteEditor ) {
@@ -359,7 +359,7 @@ const getSiteEditorBasicNavigationCommands = () =>
 
 				result.push( {
 					name: 'core/edit-site/open-templates',
-					label: __( 'Go to Templates' ),
+					label: __( 'Go to: Templates' ),
 					icon: layout,
 					callback: ( { close } ) => {
 						if ( isSiteEditor ) {
@@ -379,7 +379,7 @@ const getSiteEditorBasicNavigationCommands = () =>
 			if ( canCreatePatterns ) {
 				result.push( {
 					name: 'core/edit-site/open-patterns',
-					label: __( 'Go to Patterns' ),
+					label: __( 'Go to: Patterns' ),
 					icon: symbol,
 					callback: ( { close } ) => {
 						if ( canCreateTemplate ) {
