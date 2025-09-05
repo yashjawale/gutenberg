@@ -124,7 +124,7 @@ const getGlobalStylesOpenCssCommands = () =>
 			return [
 				{
 					name: 'core/edit-site/open-styles-css',
-					label: __( 'Go to custom CSS' ),
+					label: __( 'Open custom CSS' ),
 					icon: brush,
 					callback: ( { close } ) => {
 						close();
