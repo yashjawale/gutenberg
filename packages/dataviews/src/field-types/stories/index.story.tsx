@@ -32,7 +32,6 @@ const meta = {
 			options: [
 				'default',
 				'array',
-				'boolean',
 				'checkbox',
 				'date',
 				'datetime',
@@ -41,7 +40,9 @@ const meta = {
 				'radio',
 				'select',
 				'telephone',
+				'url',
 				'text',
+				'toggle',
 				'toggleGroup',
 			],
 		},
@@ -60,6 +61,7 @@ type DataType = {
 	integer: number;
 	integerWithElements: number;
 	boolean: boolean;
+	booleanWithToggle: boolean;
 	booleanWithElements: boolean;
 	datetime: string;
 	datetimeWithElements: string;
@@ -69,6 +71,8 @@ type DataType = {
 	emailWithElements: string;
 	telephone: string;
 	telephoneWithElements: string;
+	url: string;
+	urlWithElements: string;
 	media: string;
 	mediaWithElements: string;
 	array: string[];
@@ -85,6 +89,7 @@ const data: DataType[] = [
 		integer: 1,
 		integerWithElements: 1,
 		boolean: true,
+		booleanWithToggle: true,
 		booleanWithElements: true,
 		datetime: '2021-01-01T14:30:00Z',
 		datetimeWithElements: '2021-01-01T14:30:00Z',
@@ -94,6 +99,8 @@ const data: DataType[] = [
 		emailWithElements: 'hi@example.com',
 		telephone: '+1-555-123-4567',
 		telephoneWithElements: '+1-555-123-4567',
+		url: 'https://example.com',
+		urlWithElements: 'https://example.com',
 		media: 'https://live.staticflickr.com/7398/9458193857_e1256123e3_z.jpg',
 		mediaWithElements:
 			'https://live.staticflickr.com/7398/9458193857_e1256123e3_z.jpg',
@@ -144,6 +151,13 @@ const fields: Field< DataType >[] = [
 		type: 'boolean',
 		label: 'Boolean',
 		description: 'Help for boolean.',
+	},
+	{
+		id: 'booleanWithToggle',
+		type: 'boolean',
+		label: 'Boolean (with toggle)',
+		description: 'Help for boolean with toggle control.',
+		Edit: 'toggle',
 	},
 	{
 		id: 'booleanWithElements',
@@ -233,6 +247,23 @@ const fields: Field< DataType >[] = [
 		],
 	},
 	{
+		id: 'url',
+		type: 'url',
+		label: 'URL',
+		description: 'Help for URL.',
+	},
+	{
+		id: 'urlWithElements',
+		type: 'url',
+		label: 'URL (with elements)',
+		description: 'Help for URL with elements.',
+		elements: [
+			{ value: 'https://example.com', label: 'https://example.com' },
+			{ value: 'https://wordpress.org', label: 'https://wordpress.org' },
+			{ value: 'https://github.com', label: 'https://github.com' },
+		],
+	},
+	{
 		id: 'media',
 		type: 'media',
 		label: 'Media',
@@ -310,7 +341,6 @@ type PanelTypes = 'regular' | 'panel';
 type ControlTypes =
 	| 'default'
 	| 'array'
-	| 'boolean'
 	| 'checkbox'
 	| 'date'
 	| 'datetime'
@@ -319,7 +349,9 @@ type ControlTypes =
 	| 'radio'
 	| 'select'
 	| 'telephone'
+	| 'url'
 	| 'text'
+	| 'toggle'
 	| 'toggleGroup';
 
 interface FieldTypeStoryProps {
@@ -567,6 +599,21 @@ export const Telephone = ( {
 			Edit={ Edit }
 		/>
 	);
+};
+
+export const Url = ( {
+	type,
+	Edit,
+}: {
+	type: PanelTypes;
+	Edit: ControlTypes;
+} ) => {
+	const urlFields = useMemo(
+		() => fields.filter( ( field ) => field.type === 'url' ),
+		[]
+	);
+
+	return <FieldTypeStory fields={ urlFields } type={ type } Edit={ Edit } />;
 };
 
 export const Media = ( {

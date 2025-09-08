@@ -16,12 +16,13 @@ import datetime from './datetime';
 import date from './date';
 import email from './email';
 import telephone from './telephone';
+import url from './url';
 import integer from './integer';
 import radio from './radio';
 import select from './select';
 import text from './text';
+import toggle from './toggle';
 import toggleGroup from './toggle-group';
-import boolean from './boolean';
 import array from './array';
 
 interface FormControls {
@@ -30,16 +31,17 @@ interface FormControls {
 
 const FORM_CONTROLS: FormControls = {
 	array,
-	boolean,
 	checkbox,
 	datetime,
 	date,
 	email,
 	telephone,
+	url,
 	integer,
 	radio,
 	select,
 	text,
+	toggle,
 	toggleGroup,
 };
 
