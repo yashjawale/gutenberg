@@ -400,56 +400,6 @@ const getSiteEditorBasicNavigationCommands = () =>
 		};
 	};
 
-// Override Pages command when in site editor to avoid conflict with Menu API.
-const getSiteEditorPagesOverrideCommand = () =>
-	function useSiteEditorPagesOverrideCommand() {
-		const history = useHistory();
-		const isSiteEditor = getPath( window.location.href )?.includes(
-			'site-editor.php'
-		);
-		const { isBlockBasedTheme, canCreateTemplate } = useSelect(
-			( select ) => {
-				return {
-					isBlockBasedTheme:
-						select( coreStore ).getCurrentTheme()?.is_block_theme,
-					canCreateTemplate: select( coreStore ).canUser( 'create', {
-						kind: 'postType',
-						name: 'wp_template',
-					} ),
-				};
-			},
-			[]
-		);
-
-		const commands = useMemo( () => {
-			// Only provide this command when in site editor and user can access it.
-			if (
-				! isSiteEditor ||
-				! canCreateTemplate ||
-				! isBlockBasedTheme
-			) {
-				return [];
-			}
-
-			return [
-				{
-					name: 'core/edit-site/open-pages',
-					label: __( 'Go to Pages' ),
-					icon: page,
-					callback: ( { close } ) => {
-						history.navigate( '/page' );
-						close();
-					},
-				},
-			];
-		}, [ history, isSiteEditor, canCreateTemplate, isBlockBasedTheme ] );
-
-		return {
-			commands,
-			isLoading: false,
-		};
-	};
-
 export function useSiteEditorNavigationCommands() {
 	useCommandLoader( {
 		name: 'core/edit-site/navigate-pages',
@@ -470,13 +420,6 @@ export function useSiteEditorNavigationCommands() {
 	useCommandLoader( {
 		name: 'core/edit-site/basic-navigation',
 		hook: getSiteEditorBasicNavigationCommands(),
-		context: 'site-editor',
-	} );
-
-	// Register the Pages override command to handle Menu API conflict
-	useCommandLoader( {
-		name: 'core/edit-site/open-pages',
-		hook: getSiteEditorPagesOverrideCommand(),
 		context: 'site-editor',
 	} );
 }
