@@ -131,7 +131,7 @@ function Thread( {
 	isFocused,
 	clearThreadFocus,
 } ) {
-	// Create a unified timeline of replies and resolution messages
+	// Create a unified timeline of replies and resolution messages.
 	const createUnifiedTimeline = () => {
 		const items = [];
 
@@ -147,8 +147,8 @@ function Thread( {
 			} );
 		}
 
-		// Add resolution messages from main comment metadata
-		const mainComment = thread.parent === 0 ? thread : null; // Only main comments have resolution history
+		// Add resolution messages from main comment metadata.
+		const mainComment = thread.parent === 0 ? thread : null; // Only main comments have resolution history.
 		if ( mainComment?.meta?._resolution_history ) {
 			const resolutionHistory = mainComment.meta._resolution_history;
 			if (
@@ -166,7 +166,7 @@ function Thread( {
 			}
 		}
 
-		// Sort by timestamp
+		// Sort by timestamp.
 		return items.sort(
 			( a, b ) => new Date( a.timestamp ) - new Date( b.timestamp )
 		);
@@ -417,7 +417,7 @@ const CommentBoard = ( { thread, onResolve, onEdit, onDelete, status } ) => {
 };
 
 const ResolutionMessage = ( { entry } ) => {
-	// Fetch user information based on userId
+	// Fetch user information based on userId.
 	const user = useSelect(
 		( select ) => {
 			if ( ! entry.userId ) {
@@ -427,11 +427,6 @@ const ResolutionMessage = ( { entry } ) => {
 		},
 		[ entry.userId ]
 	);
-
-	const formatDate = ( timestamp ) => {
-		const date = new Date( timestamp );
-		return date.toLocaleString();
-	};
 
 	const getActionMessage = ( action ) => {
 		if ( action === 'resolved' ) {
@@ -443,31 +438,22 @@ const ResolutionMessage = ( { entry } ) => {
 	};
 
 	return (
-		<HStack
-			className="editor-collab-sidebar-panel__resolution-message"
-			alignment="top"
-			spacing="3"
-		>
-			<img
-				src={ user?.avatar_urls?.[ 24 ] || '' }
-				alt={ user?.name || __( 'Unknown User' ) }
-				className="editor-collab-sidebar-panel__user-avatar"
-				width="32"
-				height="32"
-			/>
-			<VStack spacing="1" alignment="flex-start">
-				<HStack spacing="2" alignment="baseline">
-					<span className="editor-collab-sidebar-panel__user-name">
-						{ user?.name || __( 'Unknown User' ) }
-					</span>
-					<span className="editor-collab-sidebar-panel__user-time">
-						{ formatDate( entry.timestamp ) }
-					</span>
+		<>
+			<VStack
+				className="editor-collab-sidebar-panel__resolution-message"
+				spacing="2"
+			>
+				<HStack alignment="left" spacing="3" justify="flex-start">
+					<CommentAuthorInfo
+						avatar={ user?.avatar_urls?.[ 48 ] }
+						name={ user?.author_name }
+						date={ entry.timestamp }
+					/>
 				</HStack>
-				<div className="editor-collab-sidebar-panel__user-comment editor-collab-sidebar-panel__resolution-text">
+				<span className="editor-collab-sidebar-panel__user-comment editor-collab-sidebar-panel__resolution-text">
 					{ getActionMessage( entry.action ) }
-				</div>
+				</span>
 			</VStack>
-		</HStack>
+		</>
 	);
 };
