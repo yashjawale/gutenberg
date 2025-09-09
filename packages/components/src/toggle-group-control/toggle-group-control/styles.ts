@@ -8,6 +8,7 @@ import styled from '@emotion/styled';
  * Internal dependencies
  */
 import { CONFIG, COLORS } from '../../utils';
+import { MEDIA_QUERY_1X } from '../../utils/breakpoints';
 import type { ToggleGroupControlProps } from '../types';
 
 export const toggleGroupControl = ( {
@@ -84,6 +85,12 @@ const enclosingBorders = ( isBlock: ToggleGroupControlProps[ 'isBlock' ] ) => {
 		&:focus-within {
 			border-color: ${ COLORS.ui.borderFocus };
 			box-shadow: ${ CONFIG.controlBoxShadowFocus };
+
+			/* Integer fallback for 1x screens to prevent blurry rendering in Firefox */
+			${ MEDIA_QUERY_1X } {
+				box-shadow: ${ CONFIG.controlBoxShadowFocus1x };
+			}
+
 			z-index: 1;
 			// Windows High Contrast mode will show this outline, but not the box-shadow.
 			outline: 2px solid transparent;

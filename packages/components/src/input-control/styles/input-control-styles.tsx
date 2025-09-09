@@ -13,6 +13,7 @@ import type { WordPressComponentProps } from '../../context';
 import { Flex, FlexItem } from '../../flex';
 import { Text } from '../../text';
 import { baseLabelTypography, COLORS, CONFIG, rtl } from '../../utils';
+import { MEDIA_QUERY_1X } from '../../utils/breakpoints';
 import type { LabelPosition, Size, PrefixSuffixWrapperProps } from '../types';
 
 type ContainerProps = {
@@ -85,6 +86,12 @@ export const Root = styled( Flex )`
 		${ BackdropUI } {
 			border-color: ${ COLORS.ui.borderFocus };
 			box-shadow: ${ CONFIG.controlBoxShadowFocus };
+
+			/* Integer fallback for 1x screens to prevent blurry rendering in Firefox */
+			${ MEDIA_QUERY_1X } {
+				box-shadow: ${ CONFIG.controlBoxShadowFocus1x };
+			}
+
 			// Windows High Contrast mode will show this outline, but not the box-shadow.
 			outline: 2px solid transparent;
 			outline-offset: -2px;

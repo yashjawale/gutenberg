@@ -10,6 +10,7 @@ import { css } from '@emotion/react';
 import { font } from '../../utils/font';
 import { COLORS } from '../../utils/colors-values';
 import { CONFIG } from '../../utils';
+import { MEDIA_QUERY_1X } from '../../utils/breakpoints';
 import { breakpoint } from '../../utils/breakpoint';
 
 const inputStyleNeutral = css`
@@ -27,6 +28,13 @@ const inputStyleFocus = css`
 	box-shadow: 0 0 0
 		calc( ${ CONFIG.borderWidthFocus } - ${ CONFIG.borderWidth } )
 		${ COLORS.theme.accent };
+
+	/* Integer fallback for 1x screens to prevent blurry rendering in Firefox */
+	${ MEDIA_QUERY_1X } {
+		box-shadow: 0 0 0
+			calc( ${ CONFIG.borderWidthFocus1x } - ${ CONFIG.borderWidth } )
+			${ COLORS.theme.accent };
+	}
 
 	// Windows High Contrast mode will show this outline, but not the box-shadow.
 	outline: 2px solid transparent;

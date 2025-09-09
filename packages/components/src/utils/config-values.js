@@ -13,6 +13,8 @@ const CONTROL_PROPS = {
 	controlPaddingXLarge: 12 * 1.3334, // TODO: Deprecate
 
 	controlBoxShadowFocus: `0 0 0 0.5px ${ COLORS.theme.accent }`,
+	// Integer fallback for 1x screens to prevent blurry rendering in Firefox
+	controlBoxShadowFocus1x: `0 0 0 1px ${ COLORS.theme.accent }`,
 	controlHeight: CONTROL_HEIGHT,
 	controlHeightXSmall: `calc( ${ CONTROL_HEIGHT } * 0.6 )`,
 	controlHeightSmall: `calc( ${ CONTROL_HEIGHT } * 0.8 )`,
@@ -36,6 +38,8 @@ export default Object.assign( {}, CONTROL_PROPS, {
 	radiusRound: '50%',
 	borderWidth: '1px',
 	borderWidthFocus: '1.5px',
+	// Integer fallback for 1x screens to prevent blurry rendering in Firefox
+	borderWidthFocus1x: '1px',
 	borderWidthTab: '4px',
 	spinnerSize: 16,
 	fontSize: '13px',

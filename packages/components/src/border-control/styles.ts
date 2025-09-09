@@ -7,6 +7,7 @@ import { css } from '@emotion/react';
  * Internal dependencies
  */
 import { COLORS, CONFIG, boxSizingReset, rtl } from '../utils';
+import { MEDIA_QUERY_1X } from '../utils/breakpoints';
 import { space } from '../utils/space';
 import { StyledLabel } from '../base-control/styles/base-control-styles';
 import {
@@ -18,6 +19,11 @@ import type { Border } from './types';
 
 const focusBoxShadow = css`
 	box-shadow: inset ${ CONFIG.controlBoxShadowFocus };
+
+	/* Integer fallback for 1x screens to prevent blurry rendering in Firefox */
+	${ MEDIA_QUERY_1X } {
+		box-shadow: inset ${ CONFIG.controlBoxShadowFocus1x };
+	}
 `;
 
 export const borderControl = css`

@@ -14,6 +14,7 @@ import { boxSizingReset } from '../utils';
 import { Flex } from '../flex';
 import { HStack } from '../h-stack';
 import CONFIG from '../utils/config-values';
+import { MEDIA_QUERY_1X } from '../utils/breakpoints';
 
 export const NumberControlWrapper = styled( NumberControl )`
 	width: ${ space( 24 ) };
@@ -100,11 +101,24 @@ export const ColorfulWrapper = styled.div`
 	.react-colorful__interactive:focus .react-colorful__pointer {
 		box-shadow: 0 0 0 ${ CONFIG.borderWidthFocus } ${ CONFIG.surfaceColor };
 		border: ${ CONFIG.borderWidthFocus } solid black;
+
+		/* Integer fallback for 1x screens to prevent blurry rendering in Firefox */
+		${ MEDIA_QUERY_1X } {
+			box-shadow: 0 0 0 ${ CONFIG.borderWidthFocus1x }
+				${ CONFIG.surfaceColor };
+			border: ${ CONFIG.borderWidthFocus1x } solid black;
+		}
+
 		transform: translate( -50%, -50% ) scale( 1.5 );
 	}
 
 	.react-colorful__pointer-fill {
 		box-shadow: inset 0 0 0 ${ CONFIG.borderWidthFocus } #fff;
+
+		/* Integer fallback for 1x screens to prevent blurry rendering in Firefox */
+		${ MEDIA_QUERY_1X } {
+			box-shadow: inset 0 0 0 ${ CONFIG.borderWidthFocus1x } #fff;
+		}
 	}
 
 	${ interactiveHueStyles }

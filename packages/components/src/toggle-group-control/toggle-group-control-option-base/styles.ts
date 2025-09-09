@@ -8,6 +8,7 @@ import styled from '@emotion/styled';
  * Internal dependencies
  */
 import { CONFIG, COLORS } from '../../utils';
+import { MEDIA_QUERY_1X } from '../../utils/breakpoints';
 import type {
 	ToggleGroupControlProps,
 	ToggleGroupControlOptionBaseProps,
@@ -93,6 +94,14 @@ const deselectable = css`
 		box-shadow:
 			inset 0 0 0 1px ${ COLORS.ui.background },
 			0 0 0 ${ CONFIG.borderWidthFocus } ${ COLORS.theme.accent };
+
+		/* Integer fallback for 1x screens to prevent blurry rendering in Firefox */
+		${ MEDIA_QUERY_1X } {
+			box-shadow:
+				inset 0 0 0 1px ${ COLORS.ui.background },
+				0 0 0 ${ CONFIG.borderWidthFocus1x } ${ COLORS.theme.accent };
+		}
+
 		outline: 2px solid transparent;
 	}
 `;

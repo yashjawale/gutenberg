@@ -7,6 +7,7 @@ import styled from '@emotion/styled';
  * Internal dependencies
  */
 import { COLORS, CONFIG, rtl } from '../../utils';
+import { MEDIA_QUERY_1X } from '../../utils/breakpoints';
 import NumberControl from '../../number-control';
 import { BackdropUI } from '../../input-control/styles/input-control-styles';
 import type { SelectSize } from '../types';
@@ -124,6 +125,15 @@ const unitSelectSizes = ( { selectSize = 'default' }: SelectProps ) => {
 				box-shadow: 0 0 0
 					${ CONFIG.borderWidthFocus + ' ' + COLORS.ui.borderFocus };
 				outline: ${ CONFIG.borderWidthFocus } solid transparent; // For High Contrast Mode
+
+				/* Integer fallback for 1x screens to prevent blurry rendering in Firefox */
+				${ MEDIA_QUERY_1X } {
+					box-shadow: 0 0 0
+						${ CONFIG.borderWidthFocus1x +
+						' ' +
+						COLORS.ui.borderFocus };
+					outline: ${ CONFIG.borderWidthFocus1x } solid transparent; // For High Contrast Mode
+				}
 			}
 		`,
 	};

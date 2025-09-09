@@ -9,6 +9,7 @@ import styled from '@emotion/styled';
  * Internal dependencies
  */
 import { COLORS, font, rtl, CONFIG } from '../utils';
+import { MEDIA_QUERY_1X } from '../utils/breakpoints';
 import { space } from '../utils/space';
 import Icon from '../icon';
 import { Truncate } from '../truncate';
@@ -207,6 +208,11 @@ const baseItem = css`
 	/* Keyboard focus (focus-visible) */
 	&[data-focus-visible] {
 		box-shadow: 0 0 0 1.5px ${ COLORS.theme.accent };
+
+		/* Integer fallback for 1x screens to prevent blurry rendering in Firefox */
+		${ MEDIA_QUERY_1X } {
+			box-shadow: 0 0 0 1px ${ COLORS.theme.accent };
+		}
 
 		/* Only visible in Windows High Contrast mode */
 		outline: 2px solid transparent;
