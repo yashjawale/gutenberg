@@ -400,7 +400,7 @@ const getSiteEditorBasicNavigationCommands = () =>
 		};
 	};
 
-// Override Pages command when in site editor to provide site editor navigation.
+// Override Pages command when in site editor to avoid conflict with Menu API.
 const getSiteEditorPagesOverrideCommand = () =>
 	function useSiteEditorPagesOverrideCommand() {
 		const history = useHistory();
