@@ -19,6 +19,7 @@ import { Icon, check, published, moreVertical } from '@wordpress/icons';
 import { __, _x, sprintf } from '@wordpress/i18n';
 import { useSelect } from '@wordpress/data';
 import { store as blockEditorStore } from '@wordpress/block-editor';
+import { store as coreStore } from '@wordpress/core-data';
 
 /**
  * Internal dependencies
@@ -130,6 +131,54 @@ function Thread( {
 	isFocused,
 	clearThreadFocus,
 } ) {
+	// Create a unified timeline of replies and resolution messages
+	const createUnifiedTimeline = () => {
+		const items = [];
+
+		// Add replies
+		if ( thread?.reply?.length > 0 ) {
+			thread.reply.forEach( ( reply ) => {
+				items.push( {
+					type: 'reply',
+					data: reply,
+					timestamp: reply.date || reply.date_gmt,
+					id: reply.id,
+				} );
+			} );
+		}
+
+		// Add resolution messages from main comment metadata
+		const mainComment = thread.parent === 0 ? thread : null; // Only main comments have resolution history
+		if ( mainComment?.meta?._resolution_history ) {
+			const resolutionHistory = mainComment.meta._resolution_history;
+			if (
+				Array.isArray( resolutionHistory ) &&
+				resolutionHistory.length > 0
+			) {
+				resolutionHistory.forEach( ( entry, index ) => {
+					items.push( {
+						type: 'resolution',
+						data: entry,
+						timestamp: entry.timestamp,
+						id: `resolution-${ index }`,
+					} );
+				} );
+			}
+		}
+
+		// Sort by timestamp
+		return items.sort(
+			( a, b ) => new Date( a.timestamp ) - new Date( b.timestamp )
+		);
+	};
+
+	const unifiedTimeline = isFocused ? createUnifiedTimeline() : [];
+	const hasReplies = thread?.reply?.length > 0;
+	const hasResolutionHistory =
+		thread.resolution_history &&
+		Array.isArray( thread.resolution_history ) &&
+		thread.resolution_history.length > 0;
+
 	return (
 		<>
 			<CommentBoard
@@ -139,40 +188,52 @@ function Thread( {
 				onDelete={ onCommentDelete }
 				status={ thread.status }
 			/>
-			{ 0 < thread?.reply?.length && (
-				<>
-					{ ! isFocused && (
-						<VStack className="editor-collab-sidebar-panel__show-more-reply">
-							{ sprintf(
-								// translators: %s: number of replies.
-								_x( '%s more replies', 'Show replies button' ),
-								thread?.reply?.length
-							) }
-						</VStack>
-					) }
 
-					{ isFocused &&
-						thread.reply.map( ( reply ) => (
+			{ ( hasReplies || hasResolutionHistory ) && ! isFocused && (
+				<VStack className="editor-collab-sidebar-panel__show-more-reply">
+					{ sprintf(
+						// translators: %s: number of replies.
+						_x( '%s more replies', 'Show replies button' ),
+						hasReplies ? thread.reply.length : 0
+					) }
+				</VStack>
+			) }
+
+			{ isFocused &&
+				unifiedTimeline.map( ( item ) => {
+					if ( item.type === 'reply' ) {
+						return (
 							<VStack
-								key={ reply.id }
+								key={ item.id }
 								className="editor-collab-sidebar-panel__child-thread"
-								id={ reply.id }
+								id={ item.data.id }
 								spacing="2"
 							>
 								{ 'approved' !== thread.status && (
 									<CommentBoard
-										thread={ reply }
+										thread={ item.data }
 										onEdit={ onEditComment }
 										onDelete={ onCommentDelete }
 									/>
 								) }
 								{ 'approved' === thread.status && (
-									<CommentBoard thread={ reply } />
+									<CommentBoard thread={ item.data } />
 								) }
 							</VStack>
-						) ) }
-				</>
-			) }
+						);
+					} else if ( item.type === 'resolution' ) {
+						return (
+							<VStack
+								key={ item.id }
+								className="editor-collab-sidebar-panel__child-thread"
+								spacing="2"
+							>
+								<ResolutionMessage entry={ item.data } />
+							</VStack>
+						);
+					}
+					return null;
+				} ) }
 			{ 'approved' !== thread.status && isFocused && (
 				<VStack
 					className="editor-collab-sidebar-panel__child-thread"
@@ -352,5 +413,61 @@ const CommentBoard = ( { thread, onResolve, onEdit, onDelete, status } ) => {
 				</ConfirmDialog>
 			) }
 		</>
+	);
+};
+
+const ResolutionMessage = ( { entry } ) => {
+	// Fetch user information based on userId
+	const user = useSelect(
+		( select ) => {
+			if ( ! entry.userId ) {
+				return null;
+			}
+			return select( coreStore ).getUser( entry.userId );
+		},
+		[ entry.userId ]
+	);
+
+	const formatDate = ( timestamp ) => {
+		const date = new Date( timestamp );
+		return date.toLocaleString();
+	};
+
+	const getActionMessage = ( action ) => {
+		if ( action === 'resolved' ) {
+			return __( 'Marked as resolved' );
+		} else if ( action === 'reopened' ) {
+			return __( 'Re-opened' );
+		}
+		return '';
+	};
+
+	return (
+		<HStack
+			className="editor-collab-sidebar-panel__resolution-message"
+			alignment="top"
+			spacing="3"
+		>
+			<img
+				src={ user?.avatar_urls?.[ 24 ] || '' }
+				alt={ user?.name || __( 'Unknown User' ) }
+				className="editor-collab-sidebar-panel__user-avatar"
+				width="32"
+				height="32"
+			/>
+			<VStack spacing="1" alignment="flex-start">
+				<HStack spacing="2" alignment="baseline">
+					<span className="editor-collab-sidebar-panel__user-name">
+						{ user?.name || __( 'Unknown User' ) }
+					</span>
+					<span className="editor-collab-sidebar-panel__user-time">
+						{ formatDate( entry.timestamp ) }
+					</span>
+				</HStack>
+				<div className="editor-collab-sidebar-panel__user-comment editor-collab-sidebar-panel__resolution-text">
+					{ getActionMessage( entry.action ) }
+				</div>
+			</VStack>
+		</HStack>
 	);
 };

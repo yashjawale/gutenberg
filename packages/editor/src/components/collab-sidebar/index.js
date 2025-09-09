@@ -118,12 +118,66 @@ function CollabSidebarContent( {
 	};
 
 	const onCommentResolve = async ( commentId ) => {
+		// Get current comment data and user info
+		const { currentComment, currentUser } = await ( async () => {
+			const comment = await resolveSelect( coreStore ).getEntityRecord(
+				'root',
+				'comment',
+				commentId
+			);
+			const user = await resolveSelect( coreStore ).getCurrentUser();
+			return { currentComment: comment, currentUser: user };
+		} )();
+
+		if ( ! currentComment || ! currentUser ) {
+			onError();
+			return;
+		}
+
+		// Find the main (parent) comment to store resolution history
+		const mainCommentId = currentComment.parent || commentId;
+		const mainComment =
+			mainCommentId === commentId
+				? currentComment
+				: await resolveSelect( coreStore ).getEntityRecord(
+						'root',
+						'comment',
+						mainCommentId
+				  );
+
+		if ( ! mainComment ) {
+			onError();
+			return;
+		}
+
+		// Create simplified resolution entry with only essential fields
+		const newResolutionEntry = {
+			action: 'resolved',
+			timestamp: new Date().toISOString(),
+			userId: currentUser.id,
+		};
+
+		// Get existing resolution history from main comment metadata and add new entry
+		const existingMeta = mainComment.meta || {};
+		const existingHistory = existingMeta._resolution_history || [];
+		const updatedHistory = [ ...existingHistory, newResolutionEntry ];
+
+		// Save resolution history to main comment metadata
+		const savedMainComment = await saveEntityRecord( 'root', 'comment', {
+			id: mainCommentId,
+			meta: {
+				...existingMeta,
+				_resolution_history: updatedHistory,
+			},
+		} );
+
+		// Also update the actual comment status
 		const savedRecord = await saveEntityRecord( 'root', 'comment', {
 			id: commentId,
 			status: 'approved',
 		} );
 
-		if ( savedRecord ) {
+		if ( savedRecord && savedMainComment ) {
 			// translators: Comment resolved successfully
 			createNotice( 'snackbar', __( 'Comment marked as resolved.' ), {
 				type: 'snackbar',
