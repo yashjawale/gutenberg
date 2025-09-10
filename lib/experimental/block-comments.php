@@ -109,7 +109,7 @@ if ( ! function_exists( 'register_block_comment_meta_fields' ) ) {
 						),
 					),
 				),
-				'auth_callback' => function() {
+				'auth_callback' => function () {
 					return current_user_can( 'edit_posts' );
 				},
 			)
