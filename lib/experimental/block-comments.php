@@ -96,7 +96,7 @@ if ( ! function_exists( 'register_block_comment_meta_fields' ) ) {
 							'properties' => array(
 								'action'    => array(
 									'type' => 'string',
-									'enum' => array( 'resolved', 'reopened' ),
+									'enum' => array( 'resolve', 'reopen' ),
 								),
 								'timestamp' => array(
 									'type'   => 'string',

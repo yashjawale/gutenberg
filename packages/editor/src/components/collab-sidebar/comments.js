@@ -429,9 +429,9 @@ const ResolutionMessage = ( { entry } ) => {
 	);
 
 	const getActionMessage = ( action ) => {
-		if ( action === 'resolved' ) {
+		if ( action === 'resolve' ) {
 			return __( 'Marked as resolved' );
-		} else if ( action === 'reopened' ) {
+		} else if ( action === 'reopen' ) {
 			return __( 'Re-opened' );
 		}
 		return '';

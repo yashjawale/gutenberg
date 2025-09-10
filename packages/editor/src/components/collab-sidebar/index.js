@@ -150,9 +150,9 @@ function CollabSidebarContent( {
 			return;
 		}
 
-		// Create simplified resolution entry with only essential fields
+		// Create resolution entry.
 		const newResolutionEntry = {
-			action: 'resolved',
+			action: 'resolve',
 			timestamp: new Date().toISOString(),
 			userId: currentUser.id,
 		};

@@ -88,7 +88,7 @@ declare module './base-entity-records' {
 					 * Resolution history for block comments stored in main comment metadata.
 					 */
 					_resolution_history?: Array< {
-						action: 'resolved' | 'reopened';
+						action: 'resolve' | 'reopen';
 						timestamp: string;
 						userId: number;
 					} >;
