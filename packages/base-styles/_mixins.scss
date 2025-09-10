@@ -159,6 +159,12 @@
 	border-color: $accent-color;
 	// Expand the default border focus style by .5px to be a total of 1.5px.
 	box-shadow: 0 0 0 0.5px $accent-color;
+
+	/* Integer fallback for 1x screens to prevent blurry rendering in Firefox */
+	@media (-webkit-max-device-pixel-ratio: 1), (max-resolution: 1dppx) {
+		box-shadow: 0 0 0 1px $accent-color;
+	}
+
 	// Windows High Contrast mode will show this outline, but not the box-shadow.
 	outline: 2px solid transparent;
 }

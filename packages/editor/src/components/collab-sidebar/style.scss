@@ -19,16 +19,33 @@
 		padding: $grid-unit-20;
 		border-radius: $radius-large;
 		border: 1.5px solid $gray-300;
+
+		/* Integer fallback for 1x screens to prevent blurry rendering in Firefox */
+		@media (-webkit-max-device-pixel-ratio: 1), (max-resolution: 1dppx) {
+			border: 2px solid $gray-300;
+		}
+
 		background-color: $gray-100;
 		margin-bottom: $grid-unit-20;
 	}
 
 	&__active-thread {
 		border: 1.5px solid #3858e9;
+
+		/* Integer fallback for 1x screens to prevent blurry rendering in Firefox */
+		@media (-webkit-max-device-pixel-ratio: 1), (max-resolution: 1dppx) {
+			border: 2px solid #3858e9;
+		}
 	}
 
 	&__focus-thread {
 		border: 1.5px solid #3858e9;
+
+		/* Integer fallback for 1x screens to prevent blurry rendering in Firefox */
+		@media (-webkit-max-device-pixel-ratio: 1), (max-resolution: 1dppx) {
+			border: 2px solid #3858e9;
+		}
+
 		background-color: $white;
 		box-shadow: 0 5.5px 7.8px -0.3px rgba(0, 0, 0, 0.102);
 	}
