@@ -428,8 +428,8 @@ const getGlobalStylesOpenCssCommands = () =>
 
 			return [
 				{
-					name: 'core/go-to-custom-css',
-					label: __( 'Go to custom CSS' ),
+					name: 'core/open-styles-css',
+					label: __( 'Open custom CSS' ),
 					icon: brush,
 					callback: ( { close } ) => {
 						close();
