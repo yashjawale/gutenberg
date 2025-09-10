@@ -481,6 +481,5 @@ export function useSiteEditorNavigationCommands() {
 	useCommandLoader( {
 		name: 'core/edit-site/global-styles-css',
 		hook: getGlobalStylesOpenCssCommands(),
-		context: 'site-editor',
 	} );
 }
