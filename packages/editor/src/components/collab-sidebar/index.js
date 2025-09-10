@@ -118,7 +118,7 @@ function CollabSidebarContent( {
 	};
 
 	const onCommentResolve = async ( commentId ) => {
-		// Get current comment data and user info
+		// Get current comment data and user info.
 		const { currentComment, currentUser } = await ( async () => {
 			const comment = await resolveSelect( coreStore ).getEntityRecord(
 				'root',
@@ -134,7 +134,7 @@ function CollabSidebarContent( {
 			return;
 		}
 
-		// Find the main (parent) comment to store resolution history
+		// Find the main (parent) comment to store resolution history.
 		const mainCommentId = currentComment.parent || commentId;
 		const mainComment =
 			mainCommentId === commentId
@@ -157,12 +157,12 @@ function CollabSidebarContent( {
 			userId: currentUser.id,
 		};
 
-		// Get existing resolution history from main comment metadata and add new entry
+		// Get existing resolution history from main comment metadata and add new entry.
 		const existingMeta = mainComment.meta || {};
 		const existingHistory = existingMeta._resolution_history || [];
 		const updatedHistory = [ ...existingHistory, newResolutionEntry ];
 
-		// Save resolution history to main comment metadata
+		// Save resolution history to main comment metadata.
 		const savedMainComment = await saveEntityRecord( 'root', 'comment', {
 			id: mainCommentId,
 			meta: {
@@ -171,7 +171,7 @@ function CollabSidebarContent( {
 			},
 		} );
 
-		// Also update the actual comment status
+		// Also update the actual comment status.
 		const savedRecord = await saveEntityRecord( 'root', 'comment', {
 			id: commentId,
 			status: 'approved',
