@@ -164,7 +164,6 @@ const CommentAvatarIndicator = ( { onClick } ) => {
 							alt={ participant.name }
 							className="comment-avatar"
 							style={ { zIndex: maxAvatars - index } }
-							title={ participant.name }
 						/>
 					) ) }
 					{ overflowCount > 0 && (
