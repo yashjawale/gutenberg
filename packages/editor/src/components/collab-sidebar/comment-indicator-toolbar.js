@@ -139,7 +139,14 @@ const CommentAvatarIndicator = ( { onClick } ) => {
 
 	// If we hit the comment limit, show "100+" instead of exact overflow count.
 	const overflowText =
-		hasMoreComments && overflowCount > 0 ? '100+' : `+${ overflowCount }`;
+	const overflowText =
+		hasMoreComments && overflowCount > 0
+			? __( '100+' )
+			: sprintf(
+					// translators: %s: Number of comments.
+					__( '+%s' ),
+					overflowCount
+			  );
 
 	const overflowTitle =
 		hasMoreComments && overflowCount > 0
