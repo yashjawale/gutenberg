@@ -160,9 +160,9 @@ const CommentAvatarIndicator = ( { onClick } ) => {
 	return (
 		<CommentIconToolbarSlotFill.Fill>
 			<ToolbarButton
-				className={ `comment-avatar-indicator ${
-					hasUnresolved ? 'has-unresolved' : 'all-resolved'
-				}` }
+				className={ clsx( 'comment-avatar-indicator', {
+					'has-unresolved': hasUnresolved,
+				} ) }
 				label={ _x( 'View comments', 'View comment thread' ) }
 				onClick={ onClick }
 				showTooltip
