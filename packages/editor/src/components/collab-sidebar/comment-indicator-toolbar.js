@@ -2,13 +2,18 @@
  * WordPress dependencies
  */
 import { ToolbarButton } from '@wordpress/components';
-import { _x } from '@wordpress/i18n';
+import { _x, __, sprintf } from '@wordpress/i18n';
 import { useSelect } from '@wordpress/data';
 import {
 	privateApis as blockEditorPrivateApis,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
 import { store as coreStore } from '@wordpress/core-data';
+
+/**
+ * External dependencies
+ */
+import clsx from 'clsx';
 
 /**
  * Internal dependencies
@@ -138,7 +143,6 @@ const CommentAvatarIndicator = ( { onClick } ) => {
 	const overflowCount = Math.max( 0, threadParticipants.length - maxAvatars );
 
 	// If we hit the comment limit, show "100+" instead of exact overflow count.
-	const overflowText =
 	const overflowText =
 		hasMoreComments && overflowCount > 0
 			? __( '100+' )
