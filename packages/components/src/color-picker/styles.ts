@@ -106,7 +106,6 @@ export const ColorfulWrapper = styled.div`
 		${ MEDIA_QUERY_1X } {
 			box-shadow: 0 0 0 ${ CONFIG.borderWidthFocus1x }
 				${ CONFIG.surfaceColor };
-			border: ${ CONFIG.borderWidthFocus1x } solid black;
 		}
 
 		transform: translate( -50%, -50% ) scale( 1.5 );

@@ -132,7 +132,6 @@ const unitSelectSizes = ( { selectSize = 'default' }: SelectProps ) => {
 						${ CONFIG.borderWidthFocus1x +
 						' ' +
 						COLORS.ui.borderFocus };
-					outline: ${ CONFIG.borderWidthFocus1x } solid transparent; // For High Contrast Mode
 				}
 			}
 		`,
