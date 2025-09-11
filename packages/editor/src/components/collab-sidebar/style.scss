@@ -152,11 +152,11 @@
 				position: absolute;
 				top: -2px;
 				right: -2px;
-				width: 8px;
-				height: 8px;
+				width: $grid-unit-10;
+				height: $grid-unit-10;;
 				background: #d63638;
-				border-radius: 50%;
-				border: 1px solid $white;
+				border-radius: $radius-round;
+				border: $border-width solid $white;
 				z-index: 10;
 			}
 		}
