@@ -211,7 +211,7 @@ const baseItem = css`
 
 		/* Integer fallback for 1x screens to prevent blurry rendering in Firefox */
 		${ MEDIA_QUERY_1X } {
-			box-shadow: 0 0 0 2px ${ COLORS.theme.accent };
+			box-shadow: 0 0 0 1px ${ COLORS.theme.accent };
 		}
 
 		/* Only visible in Windows High Contrast mode */
