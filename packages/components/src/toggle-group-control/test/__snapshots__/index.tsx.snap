@@ -60,6 +60,12 @@ exports[`ToggleGroupControl controlled should render correctly with icons 1`] = 
   outline-offset: -2px;
 }
 
+@media (-webkit-max-device-pixel-ratio: 1), (max-resolution: 1dppx) {
+  .emotion-8:focus-within {
+    box-shadow: 0 0 0 1px var(--wp-components-color-accent, var(--wp-admin-theme-color, #3858e9));
+  }
+}
+
 @media not ( prefers-reduced-motion ) {
   .emotion-8[data-indicator-animated]::before {
     transition-property: transform,border-radius;
@@ -425,6 +431,12 @@ exports[`ToggleGroupControl controlled should render correctly with text options
   outline-offset: -2px;
 }
 
+@media (-webkit-max-device-pixel-ratio: 1), (max-resolution: 1dppx) {
+  .emotion-8:focus-within {
+    box-shadow: 0 0 0 1px var(--wp-components-color-accent, var(--wp-admin-theme-color, #3858e9));
+  }
+}
+
 @media not ( prefers-reduced-motion ) {
   .emotion-8[data-indicator-animated]::before {
     transition-property: transform,border-radius;
@@ -692,6 +704,12 @@ exports[`ToggleGroupControl uncontrolled should render correctly with icons 1`] 
   z-index: 1;
   outline: 2px solid transparent;
   outline-offset: -2px;
+}
+
+@media (-webkit-max-device-pixel-ratio: 1), (max-resolution: 1dppx) {
+  .emotion-8:focus-within {
+    box-shadow: 0 0 0 1px var(--wp-components-color-accent, var(--wp-admin-theme-color, #3858e9));
+  }
 }
 
 @media not ( prefers-reduced-motion ) {
@@ -1051,6 +1069,12 @@ exports[`ToggleGroupControl uncontrolled should render correctly with text optio
   z-index: 1;
   outline: 2px solid transparent;
   outline-offset: -2px;
+}
+
+@media (-webkit-max-device-pixel-ratio: 1), (max-resolution: 1dppx) {
+  .emotion-8:focus-within {
+    box-shadow: 0 0 0 1px var(--wp-components-color-accent, var(--wp-admin-theme-color, #3858e9));
+  }
 }
 
 @media not ( prefers-reduced-motion ) {
