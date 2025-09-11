@@ -150,8 +150,12 @@ const CommentAvatarIndicator = ( { onClick } ) => {
 
 	const overflowTitle =
 		hasMoreComments && overflowCount > 0
-			? '100+ participants'
-			: `+${ overflowCount } more participants`;
+			? __( '100+ participants' )
+			: sprintf(
+					// translators: %s: Number of comments.
+					__( '+%s more participants' ),
+					overflowCount
+			  );
 
 	return (
 		<CommentIconToolbarSlotFill.Fill>
