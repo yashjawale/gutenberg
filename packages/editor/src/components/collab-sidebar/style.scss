@@ -140,9 +140,8 @@
 	background: transparent;
 	border: none;
 
-	&:hover {
+	&:hover::before {
 		background: rgba(0, 0, 0, 0.04);
-		border-radius: $radius-medium;
 	}
 
 	&.has-unresolved {
