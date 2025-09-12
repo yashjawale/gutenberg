@@ -222,26 +222,44 @@ export default function CollabSidebar() {
 	const { enableComplementaryArea } = useDispatch( interfaceStore );
 	const { getActiveComplementaryArea } = useSelect( interfaceStore );
 
-	const { postId, postType, postStatus, threads } = useSelect( ( select ) => {
-		const { getCurrentPostId, getCurrentPostType } = select( editorStore );
-		const _postId = getCurrentPostId();
-		const data =
-			!! _postId && typeof _postId === 'number'
-				? select( coreStore ).getEntityRecords( 'root', 'comment', {
-						post: _postId,
-						type: 'block_comment',
-						status: 'any',
-						per_page: 100,
-				  } )
+	const { postId, postType, postStatus, threads, hasMoreComments } =
+		useSelect( ( select ) => {
+			const { getCurrentPostId, getCurrentPostType } =
+				select( editorStore );
+			const _postId = getCurrentPostId();
+			const queryArgs = {
+				post: _postId,
+				type: 'block_comment',
+				status: 'any',
+				per_page: 100,
+			};
+			const data =
+				!! _postId && typeof _postId === 'number'
+					? select( coreStore ).getEntityRecords(
+							'root',
+							'comment',
+							queryArgs
+					  )
+					: null;
+
+			// Check if there are more pages available
+			const totalPages = data
+				? select( coreStore ).getEntityRecordsTotalPages(
+						'root',
+						'comment',
+						queryArgs
+				  )
 				: null;
-		return {
-			postId: _postId,
-			postType: getCurrentPostType(),
-			postStatus:
-				select( editorStore ).getEditedPostAttribute( 'status' ),
-			threads: data,
-		};
-	}, [] );
+
+			return {
+				postId: _postId,
+				postType: getCurrentPostType(),
+				postStatus:
+					select( editorStore ).getEditedPostAttribute( 'status' ),
+				threads: data,
+				hasMoreComments: totalPages && totalPages > 1,
+			};
+		}, [] );
 
 	const { blockCommentId } = useSelect( ( select ) => {
 		const { getBlockAttributes, getSelectedBlockClientId } =
@@ -335,9 +353,18 @@ export default function CollabSidebar() {
 		? CommentAvatarIndicator
 		: AddCommentButton;
 
+	// Find the current thread for the selected block
+	const currentThread = blockCommentId
+		? resultComments.find( ( thread ) => thread.id === blockCommentId )
+		: null;
+
 	return (
 		<>
-			<AddCommentComponent onClick={ openCollabBoard } />
+			<AddCommentComponent
+				onClick={ openCollabBoard }
+				thread={ currentThread }
+				hasMoreComments={ hasMoreComments }
+			/>
 			<PluginSidebar
 				identifier={ collabHistorySidebarName }
 				// translators: Comments sidebar title
