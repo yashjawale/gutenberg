@@ -234,20 +234,51 @@ export default function CollabSidebar() {
 		};
 	}, [] );
 
-	const queryArgs = {
-		post: postId,
-		type: 'block_comment',
-		status: 'any',
-		per_page: 100,
-	};
-
-	const { records: threads, totalPages } = useEntityRecords(
-		'root',
-		'comment',
-		queryArgs
+	/**
+	 * Since REST API doesn't support just excluding 'trash' status directly,
+	 * fetching 'hold' & 'approved' comments separately.
+	 * Child comments are always in 'hold' status.
+	 * For parent comments, they can be either 'hold' (unresolved) or 'approved' (resolved).
+	 *
+	 * Filtering not performed client side as pagination property is needed to determine if more comments exist.
+	 */
+	const queryArgsHold = useMemo(
+		() => ( {
+			post: postId,
+			type: 'block_comment',
+			status: 'hold',
+			per_page: 100,
+		} ),
+		[ postId ]
 	);
 
-	const hasMoreComments = totalPages && totalPages > 1;
+	const queryArgsApproved = useMemo(
+		() => ( {
+			post: postId,
+			type: 'block_comment',
+			status: 'approved',
+			per_page: 100,
+		} ),
+		[ postId ]
+	);
+
+	const { records: holdComments, totalPages: holdTotalPages } =
+		useEntityRecords( 'root', 'comment', queryArgsHold );
+
+	const { records: approvedComments, totalPages: approvedTotalPages } =
+		useEntityRecords( 'root', 'comment', queryArgsApproved );
+
+	// Combine both comment arrays and calculate total pagination
+	const threads = useMemo( () => {
+		if ( ! holdComments && ! approvedComments ) {
+			return [];
+		}
+		return [ ...( holdComments || [] ), ...( approvedComments || [] ) ];
+	}, [ holdComments, approvedComments ] );
+
+	const hasMoreComments =
+		( holdTotalPages && holdTotalPages > 1 ) ||
+		( approvedTotalPages && approvedTotalPages > 1 );
 
 	const { blockCommentId } = useSelect( ( select ) => {
 		const { getBlockAttributes, getSelectedBlockClientId } =
@@ -276,17 +307,15 @@ export default function CollabSidebar() {
 		const compare = {};
 		const result = [];
 
-		const filteredComments = ( threads ?? [] ).filter(
-			( comment ) => comment.status !== 'trash'
-		);
+		const allComments = threads ?? [];
 
 		// Initialize each object with an empty `reply` array.
-		filteredComments.forEach( ( item ) => {
+		allComments.forEach( ( item ) => {
 			compare[ item.id ] = { ...item, reply: [] };
 		} );
 
 		// Iterate over the data to build the tree structure.
-		filteredComments.forEach( ( item ) => {
+		allComments.forEach( ( item ) => {
 			if ( item.parent === 0 ) {
 				// If parent is 0, it's a root item, push it to the result array.
 				result.push( compare[ item.id ] );
