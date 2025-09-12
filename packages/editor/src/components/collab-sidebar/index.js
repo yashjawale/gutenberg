@@ -254,8 +254,6 @@ export default function CollabSidebar() {
 			return {
 				postId: _postId,
 				postType: getCurrentPostType(),
-				postStatus:
-					select( editorStore ).getEditedPostAttribute( 'status' ),
 				threads: data,
 				hasMoreComments: totalPages && totalPages > 1,
 			};
