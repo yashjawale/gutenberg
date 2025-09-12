@@ -132,17 +132,17 @@
 	}
 }
 
-// Comment avatar indicators
+// Comment avatar indicators.
 .comment-avatar-indicator {
 	position: relative;
-	padding: 4px !important;
-	min-width: auto !important;
-	background: transparent !important;
-	border: none !important;
+	padding: 4px;
+	min-width: auto;
+	background: transparent;
+	border: none;
 
 	&:hover {
-		background: rgba(0, 0, 0, 0.04) !important;
-		border-radius: 4px;
+		background: rgba(0, 0, 0, 0.04);
+		border-radius: $radius-medium;
 	}
 
 	&.has-unresolved {
@@ -167,13 +167,13 @@
 	display: flex;
 	align-items: center;
 	position: relative;
-	height: 24px;
+	height: $icon-size;
 }
 
 .comment-avatar {
-	width: 24px;
-	height: 24px;
-	border-radius: 50%;
+	width: $icon-size;
+	height: $icon-size;
+	border-radius: $radius-round;
 	border: 2px solid $white;
 	margin-left: -6px;
 	flex-shrink: 0;
@@ -194,7 +194,7 @@
 
 .comment-avatar-overflow {
 	width: fit-content;
-	height: 24px;
+	height: $icon-size;
 	border-radius: 4rem;
 	padding: 0 4px;
 	background: #757575;
