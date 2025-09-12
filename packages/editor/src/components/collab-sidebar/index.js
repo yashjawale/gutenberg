@@ -12,7 +12,11 @@ import { useState, useMemo } from '@wordpress/element';
 import { comment as commentIcon } from '@wordpress/icons';
 import { addFilter } from '@wordpress/hooks';
 import { store as noticesStore } from '@wordpress/notices';
-import { store as coreStore, useEntityBlockEditor } from '@wordpress/core-data';
+import {
+	store as coreStore,
+	useEntityBlockEditor,
+	useEntityRecords,
+} from '@wordpress/core-data';
 import { store as blockEditorStore } from '@wordpress/block-editor';
 import { store as interfaceStore } from '@wordpress/interface';
 
@@ -222,44 +226,28 @@ export default function CollabSidebar() {
 	const { enableComplementaryArea } = useDispatch( interfaceStore );
 	const { getActiveComplementaryArea } = useSelect( interfaceStore );
 
-	const { postId, postType, threads, hasMoreComments } = useSelect(
-		( select ) => {
-			const { getCurrentPostId, getCurrentPostType } =
-				select( editorStore );
-			const _postId = getCurrentPostId();
-			const queryArgs = {
-				post: _postId,
-				type: 'block_comment',
-				status: 'any',
-				per_page: 100,
-			};
-			const data =
-				!! _postId && typeof _postId === 'number'
-					? select( coreStore ).getEntityRecords(
-							'root',
-							'comment',
-							queryArgs
-					  )
-					: null;
+	const { postId, postType } = useSelect( ( select ) => {
+		const { getCurrentPostId, getCurrentPostType } = select( editorStore );
+		return {
+			postId: getCurrentPostId(),
+			postType: getCurrentPostType(),
+		};
+	}, [] );
 
-			// Check if there are more pages available
-			const totalPages = data
-				? select( coreStore ).getEntityRecordsTotalPages(
-						'root',
-						'comment',
-						queryArgs
-				  )
-				: null;
+	const queryArgs = {
+		post: postId,
+		type: 'block_comment',
+		status: 'any',
+		per_page: 100,
+	};
 
-			return {
-				postId: _postId,
-				postType: getCurrentPostType(),
-				threads: data,
-				hasMoreComments: totalPages && totalPages > 1,
-			};
-		},
-		[]
+	const { records: threads, totalPages } = useEntityRecords(
+		'root',
+		'comment',
+		queryArgs
 	);
+
+	const hasMoreComments = totalPages && totalPages > 1;
 
 	const { blockCommentId } = useSelect( ( select ) => {
 		const { getBlockAttributes, getSelectedBlockClientId } =
