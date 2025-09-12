@@ -52,6 +52,12 @@ const CommentAvatarIndicator = ( { onClick, thread, hasMoreComments } ) => {
 
 	const hasUnresolved = thread?.status !== 'approved';
 
+	// Check if this specific thread has more participants due to pagination
+	// If we have pagination AND this thread + its replies equals or exceeds the API limit,
+	// then this thread likely has more participants that weren't loaded.
+	const threadHasMoreParticipants =
+		hasMoreComments && thread?.reply && 1 + thread.reply.length >= 100;
+
 	if ( ! threadParticipants.length ) {
 		return null;
 	}
@@ -63,7 +69,7 @@ const CommentAvatarIndicator = ( { onClick, thread, hasMoreComments } ) => {
 
 	// If we hit the comment limit, show "100+" instead of exact overflow count.
 	const overflowText =
-		hasMoreComments && overflowCount > 0
+		threadHasMoreParticipants && overflowCount > 0
 			? __( '100+' )
 			: sprintf(
 					// translators: %s: Number of comments.
@@ -72,7 +78,7 @@ const CommentAvatarIndicator = ( { onClick, thread, hasMoreComments } ) => {
 			  );
 
 	const overflowTitle =
-		hasMoreComments && overflowCount > 0
+		threadHasMoreParticipants && overflowCount > 0
 			? __( '100+ participants' )
 			: sprintf(
 					// translators: %s: Number of comments.
