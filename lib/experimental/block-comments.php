@@ -44,7 +44,7 @@ if ( ! function_exists( 'update_get_avatar_comment_type' ) ) {
  *
  * This function modifies the 'status' parameter in the comment collection params
  * to accept both string and array types, allowing queries like status=['hold','approved'].
- * 
+ *
  * TODO: Remove when https://github.com/WordPress/wordpress-develop/pull/9870 is merged.
  *
  * @param array $query_params The collection parameters.
