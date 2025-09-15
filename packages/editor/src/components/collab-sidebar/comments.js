@@ -13,9 +13,8 @@ import {
 	__experimentalConfirmDialog as ConfirmDialog,
 	Button,
 	DropdownMenu,
-	Tooltip,
 } from '@wordpress/components';
-import { Icon, check, published, moreVertical } from '@wordpress/icons';
+import { published, moreVertical } from '@wordpress/icons';
 import { __, _x, sprintf } from '@wordpress/i18n';
 import { useSelect } from '@wordpress/data';
 import { store as blockEditorStore } from '@wordpress/block-editor';
@@ -277,27 +276,20 @@ const CommentBoard = ( {
 				/>
 				<span className="editor-collab-sidebar-panel__comment-status">
 					<HStack alignment="right" justify="flex-end" spacing="0">
-						{ 0 === thread?.parent &&
-							status !== 'approved' &&
-							onResolve && (
-								<Button
-									label={ _x(
-										'Resolve',
-										'Mark comment as resolved'
-									) }
-									__next40pxDefaultSize
-									icon={ published }
-									onClick={ () => {
-										onResolve( thread.id );
-									} }
-									showTooltip
-								/>
-							) }
-						{ status === 'approved' && (
-							// translators: tooltip for resolved comment
-							<Tooltip text={ __( 'Resolved' ) }>
-								<Icon icon={ check } />
-							</Tooltip>
+						{ 0 === thread?.parent && onResolve && (
+							<Button
+								label={ _x(
+									'Resolve',
+									'Mark comment as resolved'
+								) }
+								size="small"
+								icon={ published }
+								disabled={ status === 'approved' }
+								accessibleWhenDisabled={ status === 'approved' }
+								onClick={ () => {
+									onResolve( thread.id );
+								} }
+							/>
 						) }
 						{ 0 < moreActions.length && (
 							<DropdownMenu
