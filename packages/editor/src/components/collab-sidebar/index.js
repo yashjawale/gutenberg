@@ -242,43 +242,23 @@ export default function CollabSidebar() {
 	 *
 	 * Filtering not performed client side as pagination property is needed to determine if more comments exist.
 	 */
-	const queryArgsHold = useMemo(
+	const queryArgs = useMemo(
 		() => ( {
 			post: postId,
 			type: 'block_comment',
-			status: 'hold',
+			status: [ 'hold', 'approved' ],
 			per_page: 100,
 		} ),
 		[ postId ]
 	);
 
-	const queryArgsApproved = useMemo(
-		() => ( {
-			post: postId,
-			type: 'block_comment',
-			status: 'approved',
-			per_page: 100,
-		} ),
-		[ postId ]
+	const { records: threads, totalPages } = useEntityRecords(
+		'root',
+		'comment',
+		queryArgs
 	);
 
-	const { records: holdComments, totalPages: holdTotalPages } =
-		useEntityRecords( 'root', 'comment', queryArgsHold );
-
-	const { records: approvedComments, totalPages: approvedTotalPages } =
-		useEntityRecords( 'root', 'comment', queryArgsApproved );
-
-	// Combine both comment arrays and calculate total pagination
-	const threads = useMemo( () => {
-		if ( ! holdComments && ! approvedComments ) {
-			return [];
-		}
-		return [ ...( holdComments || [] ), ...( approvedComments || [] ) ];
-	}, [ holdComments, approvedComments ] );
-
-	const hasMoreComments =
-		( holdTotalPages && holdTotalPages > 1 ) ||
-		( approvedTotalPages && approvedTotalPages > 1 );
+	const hasMoreComments = totalPages && totalPages > 1;
 
 	const { blockCommentId } = useSelect( ( select ) => {
 		const { getBlockAttributes, getSelectedBlockClientId } =
