@@ -40,25 +40,6 @@ if ( ! function_exists( 'update_get_avatar_comment_type' ) ) {
 }
 
 /**
- * Allows multiple comment statuses to be passed as an array in REST API requests.
- *
- * This function modifies the 'status' parameter in the comment collection params
- * to accept both string and array types, allowing queries like status=['hold','approved'].
- *
- * TODO: Remove when https://github.com/WordPress/wordpress-develop/pull/9870 is merged.
- *
- * @param array $query_params The collection parameters.
- * @return array The updated collection parameters.
- */
-function gutenberg_filter_rest_comment_collection_params( $query_params ) {
-	if ( isset( $query_params['status'] ) ) {
-		$query_params['status']['type'] = array( 'string', 'array' );
-	}
-	return $query_params;
-}
-add_filter( 'rest_comment_collection_params', 'gutenberg_filter_rest_comment_collection_params' );
-
-/**
  * Excludes block comments from the admin comments query.
  *
  * This function modifies the comments query to exclude comments of type 'block_comment'

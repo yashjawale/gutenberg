@@ -240,7 +240,7 @@ export default function CollabSidebar() {
 	const queryArgs = {
 		post: postId,
 		type: 'block_comment',
-		status: [ 'hold', 'approved' ],
+		status: 'all',
 		per_page: 100,
 	};
 
