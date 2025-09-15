@@ -234,23 +234,12 @@ export default function CollabSidebar() {
 		};
 	}, [] );
 
-	/**
-	 * Since REST API doesn't support just excluding 'trash' status directly,
-	 * fetching 'hold' & 'approved' comments separately.
-	 * Child comments are always in 'hold' status.
-	 * For parent comments, they can be either 'hold' (unresolved) or 'approved' (resolved).
-	 *
-	 * Filtering not performed client side as pagination property is needed to determine if more comments exist.
-	 */
-	const queryArgs = useMemo(
-		() => ( {
-			post: postId,
-			type: 'block_comment',
-			status: [ 'hold', 'approved' ],
-			per_page: 100,
-		} ),
-		[ postId ]
-	);
+	const queryArgs = {
+		post: postId,
+		type: 'block_comment',
+		status: [ 'hold', 'approved' ],
+		per_page: 100,
+	};
 
 	const { records: threads, totalPages } = useEntityRecords(
 		'root',
