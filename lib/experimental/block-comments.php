@@ -50,15 +50,13 @@ if ( ! function_exists( 'update_get_avatar_comment_type' ) ) {
  * @param array $query_params The collection parameters.
  * @return array The updated collection parameters.
  */
-if ( ! function_exists( 'gutenberg_filter_rest_comment_collection_params' ) ) {
-	function gutenberg_filter_rest_comment_collection_params( $query_params ) {
-		if ( isset( $query_params['status'] ) ) {
-			$query_params['status']['type'] = array( 'string', 'array' );
-		}
-		return $query_params;
+function gutenberg_filter_rest_comment_collection_params( $query_params ) {
+	if ( isset( $query_params['status'] ) ) {
+		$query_params['status']['type'] = array( 'string', 'array' );
 	}
-	add_filter( 'rest_comment_collection_params', 'gutenberg_filter_rest_comment_collection_params' );
+	return $query_params;
 }
+add_filter( 'rest_comment_collection_params', 'gutenberg_filter_rest_comment_collection_params' );
 
 /**
  * Excludes block comments from the admin comments query.
