@@ -107,10 +107,8 @@ function CollabSidebarContent( {
 			createNotice(
 				'snackbar',
 				parentCommentId
-					? // translators: Reply added successfully
-					  __( 'Reply added successfully.' )
-					: // translators: Comment added successfully
-					  __( 'Comment added successfully.' ),
+					? __( 'Reply added successfully.' )
+					: __( 'Comment added successfully.' ),
 				{
 					type: 'snackbar',
 					isDismissible: true,
@@ -128,8 +126,23 @@ function CollabSidebarContent( {
 		} );
 
 		if ( savedRecord ) {
-			// translators: Comment resolved successfully
 			createNotice( 'snackbar', __( 'Comment marked as resolved.' ), {
+				type: 'snackbar',
+				isDismissible: true,
+			} );
+		} else {
+			onError();
+		}
+	};
+
+	const onCommentReopen = async ( commentId ) => {
+		const savedRecord = await saveEntityRecord( 'root', 'comment', {
+			id: commentId,
+			status: 'hold',
+		} );
+
+		if ( savedRecord ) {
+			createNotice( 'snackbar', __( 'Comment reopened.' ), {
 				type: 'snackbar',
 				isDismissible: true,
 			} );
@@ -145,15 +158,10 @@ function CollabSidebarContent( {
 		} );
 
 		if ( savedRecord ) {
-			createNotice(
-				'snackbar',
-				// translators: Comment edited successfully
-				__( 'Comment edited successfully.' ),
-				{
-					type: 'snackbar',
-					isDismissible: true,
-				}
-			);
+			createNotice( 'snackbar', __( 'Comment edited successfully.' ), {
+				type: 'snackbar',
+				isDismissible: true,
+			} );
 		} else {
 			onError();
 		}
@@ -162,7 +170,6 @@ function CollabSidebarContent( {
 	const onError = () => {
 		createNotice(
 			'error',
-			// translators: Error message when comment submission fails
 			__(
 				'Something went wrong. Please try publishing the post, or you may have already submitted your comment earlier.'
 			),
@@ -186,15 +193,10 @@ function CollabSidebarContent( {
 			} );
 		}
 
-		createNotice(
-			'snackbar',
-			// translators: Comment deleted successfully
-			__( 'Comment deleted successfully.' ),
-			{
-				type: 'snackbar',
-				isDismissible: true,
-			}
-		);
+		createNotice( 'snackbar', __( 'Comment deleted successfully.' ), {
+			type: 'snackbar',
+			isDismissible: true,
+		} );
 	};
 
 	return (
@@ -211,6 +213,7 @@ function CollabSidebarContent( {
 				onAddReply={ addNewComment }
 				onCommentDelete={ onCommentDelete }
 				onCommentResolve={ onCommentResolve }
+				onCommentReopen={ onCommentReopen }
 				showCommentBoard={ showCommentBoard }
 				setShowCommentBoard={ setShowCommentBoard }
 			/>
@@ -346,6 +349,11 @@ export default function CollabSidebar() {
 	const currentThread = blockCommentId
 		? resultComments.find( ( thread ) => thread.id === blockCommentId )
 		: null;
+
+	// If postId is not a valid number, do not render the comment sidebar.
+	if ( ! ( !! postId && typeof postId === 'number' ) ) {
+		return null;
+	}
 
 	return (
 		<>
