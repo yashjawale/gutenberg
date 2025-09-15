@@ -200,6 +200,12 @@ function Thread( {
 								event.stopPropagation(); // Prevent the parent onClick from being triggered
 								clearThreadFocus();
 							} }
+							placeholderText={
+								'approved' === thread.status &&
+								__(
+									'Adding a comment will re-open this discussion….'
+								)
+							}
 							submitButtonText={
 								'approved' === thread.status
 									? _x(
@@ -208,6 +214,7 @@ function Thread( {
 									  )
 									: _x( 'Reply', 'Add reply comment' )
 							}
+							rows={ 'approved' === thread.status ? 2 : 4 }
 						/>
 					</VStack>
 				</VStack>
