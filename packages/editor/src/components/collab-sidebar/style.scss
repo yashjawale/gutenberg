@@ -35,6 +35,11 @@
 
 	&__comment-field {
 		flex: 1;
+
+		button {
+			flex-grow: 1;
+			justify-content: center;
+		}
 	}
 
 	&__child-thread {

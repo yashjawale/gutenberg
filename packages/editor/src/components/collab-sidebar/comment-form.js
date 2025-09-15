@@ -61,7 +61,7 @@ function CommentForm( {
 				maxRows={ 20 }
 				placeholder={ placeholderText || '' }
 			></TextareaAutosize>
-			<HStack alignment="left" spacing="3" justify="flex-start">
+			<HStack spacing="3" justify="flex-start" wrap>
 				<Button
 					__next40pxDefaultSize
 					accessibleWhenDisabled
