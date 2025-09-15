@@ -24,7 +24,6 @@ import { store as blockEditorStore } from '@wordpress/block-editor';
  */
 import CommentAuthorInfo from './comment-author-info';
 import CommentForm from './comment-form';
-import CommentQuickReply from './comment-quick-reply';
 
 /**
  * Renders the Comments component.
@@ -178,15 +177,7 @@ function Thread( {
 						) ) }
 				</>
 			) }
-			{ 'approved' === thread.status && isFocused && (
-				<CommentQuickReply
-					onSubmit={ ( inputComment ) => {
-						onCommentReopen( thread.id );
-						onAddReply( inputComment, thread.id );
-					} }
-				/>
-			) }
-			{ 'approved' !== thread.status && isFocused && (
+			{ isFocused && (
 				<VStack
 					className="editor-collab-sidebar-panel__child-thread"
 					spacing="2"
@@ -200,16 +191,23 @@ function Thread( {
 					>
 						<CommentForm
 							onSubmit={ ( inputComment ) => {
+								if ( 'approved' === thread.status ) {
+									onCommentReopen( thread.id );
+								}
 								onAddReply( inputComment, thread.id );
 							} }
 							onCancel={ ( event ) => {
 								event.stopPropagation(); // Prevent the parent onClick from being triggered
 								clearThreadFocus();
 							} }
-							submitButtonText={ _x(
-								'Reply',
-								'Add reply comment'
-							) }
+							submitButtonText={
+								'approved' === thread.status
+									? _x(
+											'Reopen & Reply',
+											'Reopen comment and add reply'
+									  )
+									: _x( 'Reply', 'Add reply comment' )
+							}
 						/>
 					</VStack>
 				</VStack>
