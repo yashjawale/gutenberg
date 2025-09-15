@@ -225,7 +225,7 @@ export default function CollabSidebar() {
 	const { enableComplementaryArea } = useDispatch( interfaceStore );
 	const { getActiveComplementaryArea } = useSelect( interfaceStore );
 
-	const { postId, postType, postStatus, threads } = useSelect( ( select ) => {
+	const { postId, postType, threads } = useSelect( ( select ) => {
 		const { getCurrentPostId, getCurrentPostType } = select( editorStore );
 		const _postId = getCurrentPostId();
 		const data =
@@ -240,8 +240,6 @@ export default function CollabSidebar() {
 		return {
 			postId: _postId,
 			postType: getCurrentPostType(),
-			postStatus:
-				select( editorStore ).getEditedPostAttribute( 'status' ),
 			threads: data,
 		};
 	}, [] );
@@ -260,7 +258,7 @@ export default function CollabSidebar() {
 
 	const openCollabBoard = () => {
 		setShowCommentBoard( true );
-		enableComplementaryArea( 'core', 'edit-post/collab-sidebar' );
+		enableComplementaryArea( 'core', collabHistorySidebarName );
 	};
 
 	const [ blocks ] = useEntityBlockEditor( 'postType', postType, {
@@ -268,7 +266,7 @@ export default function CollabSidebar() {
 	} );
 
 	// Process comments to build the tree structure
-	const { resultComments, sortedThreads } = useMemo( () => {
+	const { resultComments, unresolvedSortedThreads } = useMemo( () => {
 		// Create a compare to store the references to all objects by id
 		const compare = {};
 		const result = [];
@@ -294,7 +292,7 @@ export default function CollabSidebar() {
 		} );
 
 		if ( 0 === result?.length ) {
-			return { resultComments: [], sortedThreads: [] };
+			return { resultComments: [], unresolvedSortedThreads: [] };
 		}
 
 		const updatedResult = result.map( ( item ) => ( {
@@ -308,11 +306,18 @@ export default function CollabSidebar() {
 			updatedResult.map( ( thread ) => [ thread.id, thread ] )
 		);
 
-		const sortedComments = blockCommentIds
+		// Get comments by block order, filter out undefined threads, and exclude resolved comments.
+		const unresolvedSortedComments = blockCommentIds
 			.map( ( id ) => threadIdMap.get( id ) )
-			.filter( ( thread ) => thread !== undefined );
+			.filter(
+				( thread ) =>
+					thread !== undefined && thread.status !== 'approved'
+			);
 
-		return { resultComments: updatedResult, sortedThreads: sortedComments };
+		return {
+			resultComments: updatedResult,
+			unresolvedSortedThreads: unresolvedSortedComments,
+		};
 	}, [ threads, blocks ] );
 
 	// Get the global styles to set the background color of the sidebar.
@@ -328,10 +333,6 @@ export default function CollabSidebar() {
 				unsubscribe();
 			}
 		} );
-	}
-
-	if ( postStatus === 'publish' ) {
-		return null; // or maybe return some message indicating no threads are available.
 	}
 
 	const AddCommentComponent = blockCommentId
@@ -361,7 +362,7 @@ export default function CollabSidebar() {
 				headerClassName="editor-collab-sidebar__header"
 			>
 				<CollabSidebarContent
-					comments={ sortedThreads }
+					comments={ unresolvedSortedThreads }
 					showCommentBoard={ showCommentBoard }
 					setShowCommentBoard={ setShowCommentBoard }
 					styles={ {
