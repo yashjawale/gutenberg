@@ -52,7 +52,7 @@ const CommentAvatarIndicator = ( { onClick, thread, hasMoreComments } ) => {
 
 	const hasUnresolved = thread?.status !== 'approved';
 
-	// Check if this specific thread has more participants due to pagination
+	// Check if this specific thread has more participants due to pagination.
 	// If we have pagination AND this thread + its replies equals or exceeds the API limit,
 	// then this thread likely has more participants that weren't loaded.
 	const threadHasMoreParticipants =
