@@ -31,7 +31,7 @@ const CommentAvatarIndicator = ( { onClick, thread, hasMoreComments } ) => {
 		allComments.sort( ( a, b ) => new Date( a.date ) - new Date( b.date ) );
 
 		allComments.forEach( ( comment ) => {
-			// Track thread participants (original commenter + repliers)
+			// Track thread participants (original commenter + repliers).
 			if ( comment.author_name && comment.author_avatar_urls ) {
 				const authorKey = `${ comment.author }-${ comment.author_name }`;
 				if ( ! participantsMap.has( authorKey ) ) {
