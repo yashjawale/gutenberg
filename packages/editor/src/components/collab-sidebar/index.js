@@ -362,7 +362,7 @@ export default function CollabSidebar() {
 
 		// Iterate over the data to build the tree structure.
 		allComments.forEach( ( item ) => {
-			if ( 0 === item.parent ) {
+			if ( item.parent === 0 ) {
 				// If parent is 0, it's a root item, push it to the result array.
 				result.push( compare[ item.id ] );
 			} else if ( compare[ item.parent ] ) {
@@ -425,7 +425,7 @@ export default function CollabSidebar() {
 		: null;
 
 	// If postId is not a valid number, do not render the comment sidebar.
-	if ( ! ( !! postId && 'number' === typeof postId ) ) {
+	if ( ! ( !! postId && typeof postId === 'number' ) ) {
 		return null;
 	}
 

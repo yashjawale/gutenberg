@@ -75,7 +75,7 @@ export function Comments( {
 		<>
 			{
 				// If there are no comments, show a message indicating no comments are available.
-				( ! Array.isArray( threads ) || 0 === threads.length ) && (
+				( ! Array.isArray( threads ) || threads.length === 0 ) && (
 					<VStack
 						alignment="left"
 						className="editor-collab-sidebar-panel__thread"
@@ -139,7 +139,7 @@ function Thread( {
 		const items = [];
 
 		// Get main comment for resolution history.
-		const mainComment = 0 === thread.parent ? thread : null;
+		const mainComment = thread.parent === 0 ? thread : null;
 
 		// Add replies first.
 		if ( thread?.reply?.length > 0 ) {
@@ -199,11 +199,11 @@ function Thread( {
 			const timeDiff = dateA.getTime() - dateB.getTime();
 
 			// For identical timestamps, prefer replies over resolutions for stable sorting.
-			if ( 0 === timeDiff ) {
-				if ( 'reply' === a.type && 'resolution' === b.type ) {
+			if ( timeDiff === 0 ) {
+				if ( a.type === 'reply' && b.type === 'resolution' ) {
 					return -1;
 				}
-				if ( 'resolution' === a.type && 'reply' === b.type ) {
+				if ( a.type === 'resolution' && b.type === 'reply' ) {
 					return 1;
 				}
 				return 0;
@@ -243,7 +243,7 @@ function Thread( {
 
 			{ isFocused &&
 				unifiedTimeline.map( ( item ) => {
-					if ( 'reply' === item.type ) {
+					if ( item.type === 'reply' ) {
 						return (
 							<VStack
 								key={ item.id }
@@ -263,7 +263,7 @@ function Thread( {
 								) }
 							</VStack>
 						);
-					} else if ( 'resolution' === item.type ) {
+					} else if ( item.type === 'resolution' ) {
 						return (
 							<VStack
 								key={ item.id }
@@ -346,7 +346,7 @@ const CommentBoard = ( {
 
 	const actions = [
 		onEdit &&
-			'approved' !== status && {
+			status !== 'approved' && {
 				title: _x( 'Edit', 'Edit comment' ),
 				onClick: () => {
 					setActionState( 'edit' );
@@ -360,7 +360,7 @@ const CommentBoard = ( {
 			},
 		},
 		onReopen &&
-			'approved' === status && {
+			status === 'approved' && {
 				title: _x( 'Reopen', 'Reopen comment' ),
 				onClick: () => {
 					onReopen( thread.id );
@@ -388,8 +388,8 @@ const CommentBoard = ( {
 								) }
 								size="small"
 								icon={ published }
-								disabled={ 'approved' === status }
-								accessibleWhenDisabled={ 'approved' === status }
+								disabled={ status === 'approved' }
+								accessibleWhenDisabled={ status === 'approved' }
 								onClick={ () => {
 									onResolve( thread.id );
 								} }
@@ -454,9 +454,9 @@ const ResolutionMessage = ( { entry } ) => {
 	);
 
 	const getActionMessage = ( action ) => {
-		if ( 'resolve' === action ) {
+		if ( action === 'resolve' ) {
 			return __( 'Marked as resolved' );
-		} else if ( 'reopen' === action ) {
+		} else if ( action === 'reopen' ) {
 			return __( 'Re-opened' );
 		}
 		return '';
