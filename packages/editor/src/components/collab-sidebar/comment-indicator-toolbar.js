@@ -27,7 +27,7 @@ const CommentAvatarIndicator = ( { onClick, thread, hasMoreComments } ) => {
 		const participantsMap = new Map();
 		const allComments = [ thread, ...thread.reply ];
 
-		// Sort by date to show participants in chronological order
+		// Sort by date to show participants in chronological order.
 		allComments.sort( ( a, b ) => new Date( a.date ) - new Date( b.date ) );
 
 		allComments.forEach( ( comment ) => {
