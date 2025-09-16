@@ -463,22 +463,20 @@ const ResolutionMessage = ( { entry } ) => {
 	};
 
 	return (
-		<>
-			<VStack
-				className="editor-collab-sidebar-panel__resolution-message"
-				spacing="2"
-			>
-				<HStack alignment="left" spacing="3" justify="flex-start">
-					<CommentAuthorInfo
-						avatar={ user?.avatar_urls?.[ 48 ] }
-						name={ user?.name }
-						date={ entry.timestamp }
-					/>
-				</HStack>
-				<span className="editor-collab-sidebar-panel__user-comment editor-collab-sidebar-panel__resolution-text">
-					{ getActionMessage( entry.action ) }
-				</span>
-			</VStack>
-		</>
+		<VStack
+			className="editor-collab-sidebar-panel__resolution-message"
+			spacing="2"
+		>
+			<HStack alignment="left" spacing="3" justify="flex-start">
+				<CommentAuthorInfo
+					avatar={ user?.avatar_urls?.[ 48 ] }
+					name={ user?.name }
+					date={ entry.timestamp }
+				/>
+			</HStack>
+			<span className="editor-collab-sidebar-panel__user-comment editor-collab-sidebar-panel__resolution-text">
+				{ getActionMessage( entry.action ) }
+			</span>
+		</VStack>
 	);
 };
