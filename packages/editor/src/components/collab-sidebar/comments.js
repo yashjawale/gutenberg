@@ -15,7 +15,7 @@ import {
 	DropdownMenu,
 } from '@wordpress/components';
 import { published, moreVertical } from '@wordpress/icons';
-import { __, _x, sprintf } from '@wordpress/i18n';
+import { __, _x, _n, sprintf } from '@wordpress/i18n';
 import { useSelect } from '@wordpress/data';
 import { store as blockEditorStore } from '@wordpress/block-editor';
 import { store as coreStore } from '@wordpress/core-data';
@@ -117,6 +117,7 @@ export function Comments( {
 							onEditComment={ onEditComment }
 							isFocused={ focusThread === thread.id }
 							clearThreadFocus={ clearThreadFocus }
+							setFocusThread={ setFocusThread }
 						/>
 					</VStack>
 				) ) }
@@ -133,6 +134,7 @@ function Thread( {
 	onCommentReopen,
 	isFocused,
 	clearThreadFocus,
+	setFocusThread,
 } ) {
 	// Creates a unified timeline of replies and resolution messages to show in thread.
 	const createUnifiedTimeline = () => {
@@ -230,15 +232,23 @@ function Thread( {
 				onDelete={ onCommentDelete }
 				status={ thread.status }
 			/>
-
 			{ ( hasReplies || hasResolutionHistory ) && ! isFocused && (
-				<VStack className="editor-collab-sidebar-panel__show-more-reply">
+				<Button
+					__next40pxDefaultSize
+					variant="link"
+					className="editor-collab-sidebar-panel__show-more-reply"
+					onClick={ () => setFocusThread( thread.id ) }
+				>
 					{ sprintf(
 						// translators: %s: number of replies.
-						_x( '%s more replies', 'Show replies button' ),
+						_n(
+							'%s more reply',
+							'%s more replies',
+							thread?.reply?.length
+						),
 						hasReplies ? thread.reply.length : 0
 					) }
-				</VStack>
+				</Button>
 			) }
 
 			{ isFocused &&

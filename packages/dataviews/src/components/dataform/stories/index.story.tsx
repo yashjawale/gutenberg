@@ -41,6 +41,14 @@ type SamplePost = {
 	address1?: string;
 	address2?: string;
 	city?: string;
+	comment_status?: string;
+	ping_status?: boolean;
+	longDescription?: string;
+	origin?: string;
+	destination?: string;
+	flight_status?: string;
+	gate?: string;
+	seat?: string;
 };
 
 const fields: Field< SamplePost >[] = [
@@ -174,6 +182,80 @@ const fields: Field< SamplePost >[] = [
 		type: 'text',
 		Edit: 'textarea',
 	},
+	{
+		id: 'longDescription',
+		label: 'Long Description',
+		type: 'text',
+		Edit: {
+			control: 'textarea',
+			rows: 5,
+		},
+	},
+	{
+		id: 'comment_status',
+		label: 'Comment Status',
+		type: 'text',
+		Edit: 'radio',
+		elements: [
+			{ value: 'open', label: 'Allow comments' },
+			{ value: 'closed', label: 'Comments closed' },
+		],
+	},
+	{
+		id: 'ping_status',
+		label: 'Allow Pings/Trackbacks',
+		type: 'boolean',
+	},
+	{
+		id: 'discussion',
+		label: 'Discussion',
+		type: 'text',
+		render: ( { item } ) => {
+			const commentLabel =
+				item.comment_status === 'open'
+					? 'Allow comments'
+					: 'Comments closed';
+			const pingLabel = item.ping_status
+				? 'Pings enabled'
+				: 'Pings disabled';
+			return (
+				<span>
+					{ commentLabel }, { pingLabel }
+				</span>
+			);
+		},
+	},
+	{
+		id: 'origin',
+		label: 'Origin',
+		type: 'text',
+	},
+	{
+		id: 'destination',
+		label: 'Destination',
+		type: 'text',
+	},
+	{
+		id: 'flight_status',
+		label: 'Flight Status',
+		type: 'text',
+		Edit: 'radio',
+		elements: [
+			{ value: 'on-time', label: 'On Time' },
+			{ value: 'delayed', label: 'Delayed' },
+			{ value: 'cancelled', label: 'Cancelled' },
+		],
+	},
+	{
+		id: 'gate',
+		label: 'Gate',
+		type: 'text',
+	},
+	{
+		id: 'seat',
+		label: 'Seat',
+		type: 'text',
+	},
 ];
 
 const LayoutRegularComponent = ( {
@@ -220,6 +302,7 @@ const LayoutRegularComponent = ( {
 				'dimensions',
 				'tags',
 				'description',
+				'longDescription',
 			],
 		} ),
 		[ labelPosition ]
@@ -308,6 +391,13 @@ const LayoutPanelComponent = ( {
 		address1: '123 Main St',
 		address2: 'Apt 4B',
 		city: 'New York',
+		comment_status: 'open',
+		ping_status: true,
+		origin: 'New York (JFK)',
+		destination: 'Los Angeles (LAX)',
+		flight_status: 'on-time',
+		gate: 'A12',
+		seat: '14F',
 	} );
 
 	const form: Form = useMemo( () => {
@@ -330,9 +420,32 @@ const LayoutPanelComponent = ( {
 				'dimensions',
 				'tags',
 				{
+					id: 'discussion',
+					label: 'Discussion',
+					children: [ 'comment_status', 'ping_status' ],
+					summary: 'discussion',
+				},
+				{
 					id: 'address1',
 					label: 'Combined Address',
 					children: [ 'address1', 'address2', 'city' ],
+				},
+				{
+					id: 'flight_info',
+					label: 'Flight Information',
+					children: [
+						'origin',
+						'destination',
+						'flight_status',
+						'gate',
+					],
+					summary: [ 'origin', 'destination', 'flight_status' ],
+				},
+				{
+					id: 'passenger_details',
+					label: 'Passenger Details',
+					children: [ 'author', 'seat' ],
+					summary: [ 'author', 'seat' ],
 				},
 			],
 		};
@@ -406,6 +519,8 @@ const ValidationComponent = ( {
 		boolean: boolean;
 		customEdit: string;
 		password: string;
+		toggle?: boolean;
+		toggleGroup?: string;
 	};
 
 	const [ post, setPost ] = useState< ValidatedItem >( {
@@ -420,6 +535,8 @@ const ValidationComponent = ( {
 		boolean: true,
 		customEdit: 'custom control',
 		password: 'secretpassword123',
+		toggle: undefined,
+		toggleGroup: undefined,
 	} );
 
 	const customTextRule = ( value: ValidatedItem ) => {
@@ -474,6 +591,27 @@ const ValidationComponent = ( {
 	const customIntegerRule = ( value: ValidatedItem ) => {
 		if ( value.integer % 2 !== 0 ) {
 			return 'Integer must be an even number.';
+		}
+
+		return null;
+	};
+	const customBooleanRule = ( value: ValidatedItem ) => {
+		if ( value.boolean !== true ) {
+			return 'Boolean must be active.';
+		}
+
+		return null;
+	};
+	const customToggleRule = ( value: ValidatedItem ) => {
+		if ( value.toggle !== true ) {
+			return 'Toggle must be checked.';
+		}
+
+		return null;
+	};
+	const customToggleGroupRule = ( value: ValidatedItem ) => {
+		if ( value.toggleGroup !== 'option1' ) {
+			return 'Value must be Option 1.';
 		}
 
 		return null;
@@ -583,6 +721,7 @@ const ValidationComponent = ( {
 			label: 'Boolean',
 			isValid: {
 				required,
+				custom: maybeCustomRule( customBooleanRule ),
 			},
 		},
 		{
@@ -602,6 +741,31 @@ const ValidationComponent = ( {
 				custom: maybeCustomRule( customPasswordRule ),
 			},
 		},
+		{
+			id: 'toggle',
+			type: 'boolean',
+			label: 'Toggle',
+			Edit: 'toggle',
+			isValid: {
+				required,
+				custom: maybeCustomRule( customToggleRule ),
+			},
+		},
+		{
+			id: 'toggleGroup',
+			type: 'text',
+			label: 'Toggle Group',
+			Edit: 'toggleGroup',
+			elements: [
+				{ value: 'option1', label: 'Option 1' },
+				{ value: 'option2', label: 'Option 2' },
+				{ value: 'option3', label: 'Option 3' },
+			],
+			isValid: {
+				required,
+				custom: maybeCustomRule( customToggleGroupRule ),
+			},
+		},
 	];
 
 	const form = {
@@ -616,8 +780,10 @@ const ValidationComponent = ( {
 			'color',
 			'integer',
 			'boolean',
-			'customEdit',
+			'toggle',
+			'toggleGroup',
 			'password',
+			'customEdit',
 		],
 	};
 
