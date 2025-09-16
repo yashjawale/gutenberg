@@ -276,7 +276,7 @@ function Thread( {
 					}
 					return null;
 				} ) }
-			{ 'approved' !== thread.status && isFocused && (
+			{ isFocused && (
 				<VStack
 					className="editor-collab-sidebar-panel__child-thread"
 					spacing="2"
