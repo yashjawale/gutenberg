@@ -200,13 +200,13 @@ function Thread( {
 
 			const timeDiff = dateA.getTime() - dateB.getTime();
 
-			// For identical timestamps, prefer replies over resolutions for stable sorting.
+			// For identical timestamps, prefer resolution over replies for quick reopen scenario.
 			if ( timeDiff === 0 ) {
 				if ( a.type === 'reply' && b.type === 'resolution' ) {
-					return -1;
+					return 1;
 				}
 				if ( a.type === 'resolution' && b.type === 'reply' ) {
-					return 1;
+					return -1;
 				}
 				return 0;
 			}
