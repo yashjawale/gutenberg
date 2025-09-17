@@ -168,10 +168,7 @@ function Thread( {
 							__next40pxDefaultSize
 							variant="link"
 							className="editor-collab-sidebar-panel__show-more-reply"
-							onClick={ () => {
-								setFocusThread( thread.id );
-								// Don't auto-focus textarea when just viewing replies
-							} }
+							onClick={ () => setFocusThread( thread.id ) }
 						>
 							{ sprintf(
 								// translators: %s: number of replies.

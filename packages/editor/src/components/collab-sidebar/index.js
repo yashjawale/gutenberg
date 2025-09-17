@@ -117,8 +117,7 @@ function CollabSidebarContent( {
 				{
 					type: 'snackbar',
 					isDismissible: true,
-					speak: true, // Ensure screen reader announcement
-					politeness: 'assertive', // Use assertive for immediate user actions
+					speak: true,
 					spokenMessage: parentCommentId
 						? __( 'Reply added successfully.' )
 						: __( 'Comment added successfully.' ),
@@ -127,11 +126,8 @@ function CollabSidebarContent( {
 
 			// Set focus on the newly created comment for better accessibility
 			if ( savedRecord?.id ) {
-				// Set the newly added comment ID to trigger focus in Comments component
 				const targetCommentId = parentCommentId || savedRecord.id;
 				setNewlyAddedCommentId( targetCommentId );
-
-				// No need for manual DOM focus since we're handling it in the component
 			}
 		} catch ( error ) {
 			onError( error );
