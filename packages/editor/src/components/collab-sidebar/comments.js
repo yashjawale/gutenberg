@@ -6,7 +6,7 @@ import clsx from 'clsx';
 /**
  * WordPress dependencies
  */
-import { useState, RawHTML } from '@wordpress/element';
+import { useState, RawHTML, useEffect } from '@wordpress/element';
 import {
 	__experimentalHStack as HStack,
 	__experimentalVStack as VStack,
@@ -28,15 +28,17 @@ import CommentForm from './comment-form';
 /**
  * Renders the Comments component.
  *
- * @param {Object}   props                     - The component props.
- * @param {Array}    props.threads             - The array of comment threads.
- * @param {Function} props.onEditComment       - The function to handle comment editing.
- * @param {Function} props.onAddReply          - The function to add a reply to a comment.
- * @param {Function} props.onCommentDelete     - The function to delete a comment.
- * @param {Function} props.onCommentResolve    - The function to mark a comment as resolved.
- * @param {Function} props.onCommentReopen     - The function to reopen a resolved comment.
- * @param {boolean}  props.showCommentBoard    - Whether to show the comment board.
- * @param {Function} props.setShowCommentBoard - The function to set the comment board visibility.
+ * @param {Object}   props                        - The component props.
+ * @param {Array}    props.threads                - The array of comment threads.
+ * @param {Function} props.onEditComment          - The function to handle comment editing.
+ * @param {Function} props.onAddReply             - The function to add a reply to a comment.
+ * @param {Function} props.onCommentDelete        - The function to delete a comment.
+ * @param {Function} props.onCommentResolve       - The function to mark a comment as resolved.
+ * @param {Function} props.onCommentReopen        - The function to reopen a resolved comment.
+ * @param {boolean}  props.showCommentBoard       - Whether to show the comment board.
+ * @param {Function} props.setShowCommentBoard    - The function to set the comment board visibility.
+ * @param {number}   props.newlyAddedCommentId    - ID of newly added comment to focus.
+ * @param {Function} props.setNewlyAddedCommentId - Function to reset the newly added comment ID.
  * @return {React.ReactNode} The rendered Comments component.
  */
 export function Comments( {
@@ -48,6 +50,8 @@ export function Comments( {
 	onCommentReopen,
 	showCommentBoard,
 	setShowCommentBoard,
+	newlyAddedCommentId,
+	setNewlyAddedCommentId,
 } ) {
 	const { blockCommentId } = useSelect( ( select ) => {
 		const { getBlockAttributes, getSelectedBlockClientId } =
@@ -64,6 +68,15 @@ export function Comments( {
 	const [ focusThread, setFocusThread ] = useState(
 		showCommentBoard && blockCommentId ? blockCommentId : null
 	);
+
+	// Auto-focus newly added comments.
+	useEffect( () => {
+		if ( newlyAddedCommentId ) {
+			setFocusThread( newlyAddedCommentId );
+			// Reset the newly added comment ID after focusing.
+			setNewlyAddedCommentId( null );
+		}
+	}, [ newlyAddedCommentId, setNewlyAddedCommentId ] );
 
 	const clearThreadFocus = () => {
 		setFocusThread( null );
@@ -106,6 +119,7 @@ export function Comments( {
 						id={ thread.id }
 						spacing="3"
 						onClick={ () => setFocusThread( thread.id ) }
+						tabIndex="-1"
 					>
 						<Thread
 							thread={ thread }
@@ -117,6 +131,7 @@ export function Comments( {
 							isFocused={ focusThread === thread.id }
 							clearThreadFocus={ clearThreadFocus }
 							setFocusThread={ setFocusThread }
+							newlyAddedCommentId={ newlyAddedCommentId }
 						/>
 					</VStack>
 				) ) }
@@ -134,6 +149,7 @@ function Thread( {
 	isFocused,
 	clearThreadFocus,
 	setFocusThread,
+	newlyAddedCommentId,
 } ) {
 	return (
 		<>
@@ -152,7 +168,10 @@ function Thread( {
 							__next40pxDefaultSize
 							variant="link"
 							className="editor-collab-sidebar-panel__show-more-reply"
-							onClick={ () => setFocusThread( thread.id ) }
+							onClick={ () => {
+								setFocusThread( thread.id );
+								// Don't auto-focus textarea when just viewing replies
+							} }
 						>
 							{ sprintf(
 								// translators: %s: number of replies.
@@ -173,6 +192,7 @@ function Thread( {
 								className="editor-collab-sidebar-panel__child-thread"
 								id={ reply.id }
 								spacing="2"
+								tabIndex="-1"
 							>
 								{ 'approved' !== thread.status && (
 									<CommentBoard
@@ -226,6 +246,9 @@ function Thread( {
 									: _x( 'Reply', 'Add reply comment' )
 							}
 							rows={ 'approved' === thread.status ? 2 : 4 }
+							shouldFocusTextarea={
+								newlyAddedCommentId === thread.id
+							}
 						/>
 					</VStack>
 				</VStack>

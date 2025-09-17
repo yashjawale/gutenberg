@@ -6,7 +6,7 @@ import TextareaAutosize from 'react-autosize-textarea';
 /**
  * WordPress dependencies
  */
-import { useState } from '@wordpress/element';
+import { useState, useEffect, useRef } from '@wordpress/element';
 import {
 	__experimentalHStack as HStack,
 	Button,
@@ -23,13 +23,14 @@ import { sanitizeCommentString } from './utils';
 /**
  * EditComment component.
  *
- * @param {Object}   props                  - The component props.
- * @param {Function} props.onSubmit         - The function to call when updating the comment.
- * @param {Function} props.onCancel         - The function to call when canceling the comment update.
- * @param {Object}   props.thread           - The comment thread object.
- * @param {string}   props.submitButtonText - The text to display on the submit button.
- * @param {string?}  props.placeholderText  - The placeholder text for the comment input.
- * @param {number?}  props.rows             - The number of rows for the comment input.
+ * @param {Object}   props                     - The component props.
+ * @param {Function} props.onSubmit            - The function to call when updating the comment.
+ * @param {Function} props.onCancel            - The function to call when canceling the comment update.
+ * @param {Object}   props.thread              - The comment thread object.
+ * @param {string}   props.submitButtonText    - The text to display on the submit button.
+ * @param {string?}  props.placeholderText     - The placeholder text for the comment input.
+ * @param {number?}  props.rows                - The number of rows for the comment input.
+ * @param {boolean?} props.shouldFocusTextarea - Whether to focus the textarea for accessibility.
  * @return {React.ReactNode} The CommentForm component.
  */
 function CommentForm( {
@@ -39,19 +40,31 @@ function CommentForm( {
 	submitButtonText,
 	placeholderText,
 	rows = 4,
+	shouldFocusTextarea = false,
 } ) {
 	const [ inputComment, setInputComment ] = useState(
 		thread?.content?.raw ?? ''
 	);
 
 	const inputId = useInstanceId( CommentForm, 'comment-input' );
+	const textareaRef = useRef( null );
+
+	// Focus the textarea when shouldFocusTextarea prop is true
+	useEffect( () => {
+		if ( shouldFocusTextarea && textareaRef.current ) {
+			textareaRef.current.focus();
+		}
+	}, [ shouldFocusTextarea ] );
 
 	return (
 		<>
 			<VisuallyHidden as="label" htmlFor={ inputId }>
-				{ __( 'Comment' ) }
+				{ thread?.id
+					? __( 'Edit comment' )
+					: __( 'Add reply to comment thread' ) }
 			</VisuallyHidden>
 			<TextareaAutosize
+				ref={ textareaRef }
 				id={ inputId }
 				value={ inputComment ?? '' }
 				onChange={ ( comment ) =>
@@ -60,6 +73,11 @@ function CommentForm( {
 				rows={ rows }
 				maxRows={ 20 }
 				placeholder={ placeholderText || '' }
+				aria-label={
+					thread?.id
+						? __( 'Edit comment' )
+						: __( 'Add reply to comment thread' )
+				}
 			></TextareaAutosize>
 			<HStack spacing="3" justify="flex-start" wrap>
 				<Button
