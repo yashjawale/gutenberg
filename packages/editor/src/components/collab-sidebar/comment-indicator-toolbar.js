@@ -72,7 +72,7 @@ const CommentAvatarIndicator = ( { onClick, thread, hasMoreComments } ) => {
 		threadHasMoreParticipants && overflowCount > 0
 			? __( '100+' )
 			: sprintf(
-					// translators: %s: Number of comments.
+					// translators: %s: Number of participants.
 					__( '+%s' ),
 					overflowCount
 			  );
@@ -81,7 +81,7 @@ const CommentAvatarIndicator = ( { onClick, thread, hasMoreComments } ) => {
 		threadHasMoreParticipants && overflowCount > 0
 			? __( '100+ participants' )
 			: sprintf(
-					// translators: %s: Number of comments.
+					// translators: %s: Number of participants.
 					__( '+%s more participants' ),
 					overflowCount
 			  );
