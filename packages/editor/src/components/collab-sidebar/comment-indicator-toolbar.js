@@ -2,7 +2,7 @@
  * WordPress dependencies
  */
 import { ToolbarButton } from '@wordpress/components';
-import { _x, __, sprintf } from '@wordpress/i18n';
+import { _x, __, _n, sprintf } from '@wordpress/i18n';
 import { useMemo } from '@wordpress/element';
 import { privateApis as blockEditorPrivateApis } from '@wordpress/block-editor';
 
@@ -82,7 +82,11 @@ const CommentAvatarIndicator = ( { onClick, thread, hasMoreComments } ) => {
 			? __( '100+ participants' )
 			: sprintf(
 					// translators: %s: Number of participants.
-					__( '+%s more participants' ),
+					_n(
+						'+%s more participant',
+						'+%s more participants',
+						overflowCount
+					),
 					overflowCount
 			  );
 
