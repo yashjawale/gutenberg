@@ -18,7 +18,6 @@ import { published, moreVertical } from '@wordpress/icons';
 import { __, _x, _n, sprintf } from '@wordpress/i18n';
 import { useSelect } from '@wordpress/data';
 import { store as blockEditorStore } from '@wordpress/block-editor';
-import { store as coreStore } from '@wordpress/core-data';
 
 /**
  * Internal dependencies
@@ -136,85 +135,6 @@ function Thread( {
 	clearThreadFocus,
 	setFocusThread,
 } ) {
-	// Creates a unified timeline of replies and resolution messages to show in thread.
-	const createUnifiedTimeline = () => {
-		const items = [];
-
-		// Get main comment for resolution history.
-		const mainComment = thread.parent === 0 ? thread : null;
-
-		// Add replies first.
-		if ( thread?.reply?.length > 0 ) {
-			thread.reply.forEach( ( reply ) => {
-				let replyTimestamp =
-					reply.date || reply.date_gmt || new Date().toISOString();
-
-				// Fix timezone issue: if timestamp doesn't end with 'Z', treat it as UTC.
-				if (
-					replyTimestamp &&
-					! replyTimestamp.endsWith( 'Z' ) &&
-					! replyTimestamp.includes( '+' )
-				) {
-					replyTimestamp += 'Z';
-				}
-
-				items.push( {
-					type: 'reply',
-					data: reply,
-					timestamp: replyTimestamp,
-					id: reply.id,
-				} );
-			} );
-		}
-
-		// Add resolution messages.
-		if ( mainComment?.meta?._resolution_history ) {
-			const resolutionHistory = mainComment.meta._resolution_history;
-			if (
-				Array.isArray( resolutionHistory ) &&
-				resolutionHistory.length > 0
-			) {
-				resolutionHistory.forEach( ( entry, index ) => {
-					items.push( {
-						type: 'resolution',
-						data: entry,
-						timestamp: entry.timestamp,
-						id: `resolution-${ index }`,
-					} );
-				} );
-			}
-		}
-
-		// Sort by timestamp with precise comparison.
-		return items.sort( ( a, b ) => {
-			const dateA = new Date( a.timestamp );
-			const dateB = new Date( b.timestamp );
-
-			// Handle invalid dates
-			if ( isNaN( dateA.getTime() ) ) {
-				return 1;
-			}
-			if ( isNaN( dateB.getTime() ) ) {
-				return -1;
-			}
-
-			const timeDiff = dateA.getTime() - dateB.getTime();
-
-			// For identical timestamps, prefer resolution over replies for quick reopen scenario.
-			if ( timeDiff === 0 ) {
-				if ( a.type === 'reply' && b.type === 'resolution' ) {
-					return 1;
-				}
-				if ( a.type === 'resolution' && b.type === 'reply' ) {
-					return -1;
-				}
-				return 0;
-			}
-
-			return timeDiff;
-		} );
-	};
-
 	const unifiedTimeline = isFocused ? createUnifiedTimeline() : [];
 	const hasReplies = thread?.reply?.length > 0;
 	const hasResolutionHistory =
