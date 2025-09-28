@@ -70,3 +70,22 @@ if ( ! function_exists( 'exclude_block_comments_from_admin' ) ) {
 	}
 	add_action( 'pre_get_comments', 'exclude_block_comments_from_admin' );
 }
+
+/**
+ * Enable empty comments when the comment_type is 'block_comment_reopened' or 'block_comment_resolved'.
+ *
+ * @param bool  $allow            Whether to allow an empty comment.
+ * @param array $prepared_comment The prepared comment data.
+ * @return bool Modified allow empty comment value.
+ */
+function gutenberg_allow_empty_block_comments( $allow, $prepared_comment ) {
+	if (
+		isset( $prepared_comment['comment_type'] ) &&
+		'block_comment_reopened' === $prepared_comment['comment_type'] ||
+		'block_comment_resolved' === $prepared_comment['comment_type']
+	) {
+		$allow = true;
+	}
+	return $allow;
+}
+add_filter( 'allow_empty_comment', 'gutenberg_allow_empty_block_comments', 10, 2 );
