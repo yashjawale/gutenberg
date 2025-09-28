@@ -83,16 +83,7 @@ declare module './base-entity-records' {
 			 * Meta fields.
 			 */
 			meta: ContextualField<
-				Record< string, unknown > & {
-					/**
-					 * Resolution history for block comments stored in main comment metadata.
-					 */
-					_resolution_history?: Array< {
-						action: 'resolve' | 'reopen';
-						timestamp: string;
-						userId: number;
-					} >;
-				},
+				Record< string, unknown >,
 				'view' | 'edit',
 				C
 			>;
