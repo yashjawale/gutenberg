@@ -22,7 +22,6 @@ import {
 	store as blockEditorStore,
 	privateApis as blockEditorPrivateApis,
 } from '@wordpress/block-editor';
-import { store as coreStore } from '@wordpress/core-data';
 
 /**
  * Internal dependencies
@@ -122,11 +121,11 @@ function Thread( {
 		setShowCommentBoard( false );
 	};
 
-	const replies = thread?.reply;
-	const lastReply = !! replies.length
-		? replies[ replies.length - 1 ]
-		: undefined;
-	const restReplies = !! replies.length ? replies.slice( 0, -1 ) : [];
+	const allReplies = thread?.reply || [];
+
+	const lastReply =
+		allReplies.length > 0 ? allReplies[ allReplies.length - 1 ] : undefined;
+	const restReplies = allReplies.length > 0 ? allReplies.slice( 0, -1 ) : [];
 
 	return (
 		<VStack
@@ -144,7 +143,7 @@ function Thread( {
 				status={ thread.status }
 			/>
 			{ isFocused &&
-				replies.map( ( reply ) => (
+				allReplies.map( ( reply ) => (
 					<VStack
 						key={ reply.id }
 						className="editor-collab-sidebar-panel__child-thread"
@@ -154,12 +153,14 @@ function Thread( {
 						<CommentBoard
 							thread={ reply }
 							onEdit={
-								'approved' !== thread.status
+								'approved' !== thread.status &&
+								reply.type === 'block_comment'
 									? onEditComment
 									: undefined
 							}
 							onDelete={
-								'approved' !== thread.status
+								'approved' !== thread.status &&
+								reply.type === 'block_comment'
 									? onCommentDelete
 									: undefined
 							}
@@ -190,10 +191,14 @@ function Thread( {
 				<CommentBoard
 					thread={ lastReply }
 					onEdit={
-						'approved' !== thread.status ? onEditComment : undefined
+						'approved' !== thread.status &&
+						lastReply.type === 'block_comment'
+							? onEditComment
+							: undefined
 					}
 					onDelete={
-						'approved' !== thread.status
+						'approved' !== thread.status &&
+						lastReply.type === 'block_comment'
 							? onCommentDelete
 							: undefined
 					}
@@ -260,25 +265,33 @@ const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
 		setShowConfirmDialog( false );
 	};
 
+	// Check if this is a resolution comment.
+	const isResolutionComment =
+		thread.type === 'block_comment_resolved' ||
+		thread.type === 'block_comment_reopened';
+
 	const actions = [
 		onEdit &&
-			status !== 'approved' && {
+			status !== 'approved' &&
+			! isResolutionComment && {
 				id: 'edit',
 				title: _x( 'Edit', 'Edit comment' ),
 				onClick: () => {
 					setActionState( 'edit' );
 				},
 			},
-		onDelete && {
-			id: 'delete',
-			title: _x( 'Delete', 'Delete comment' ),
-			onClick: () => {
-				setActionState( 'delete' );
-				setShowConfirmDialog( true );
+		onDelete &&
+			! isResolutionComment && {
+				id: 'delete',
+				title: _x( 'Delete', 'Delete comment' ),
+				onClick: () => {
+					setActionState( 'delete' );
+					setShowConfirmDialog( true );
+				},
 			},
-		},
 		onEdit &&
-			status === 'approved' && {
+			status === 'approved' &&
+			! isResolutionComment && {
 				id: 'reopen',
 				title: _x( 'Reopen', 'Reopen comment' ),
 				onClick: () => {
@@ -287,7 +300,7 @@ const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
 			},
 	];
 
-	const canResolve = thread?.parent === 0;
+	const canResolve = thread?.parent === 0 && ! isResolutionComment;
 	const moreActions = actions.filter( ( item ) => item?.onClick );
 
 	return (
@@ -370,8 +383,23 @@ const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
 					) }
 				/>
 			) : (
-				<RawHTML className="editor-collab-sidebar-panel__user-comment">
-					{ thread?.content?.rendered }
+				<RawHTML
+					className={ clsx(
+						'editor-collab-sidebar-panel__user-comment',
+						{
+							'editor-collab-sidebar-panel__resolution-text':
+								isResolutionComment,
+						}
+					) }
+				>
+					{ isResolutionComment
+						? ( thread.type === 'block_comment_resolved'
+								? __( 'Marked as resolved' )
+								: __( 'Re-opened' ) ) +
+						  ( thread?.content?.rendered
+								? ': ' + thread.content.rendered
+								: '' )
+						: thread?.content?.rendered }
 				</RawHTML>
 			) }
 			{ 'delete' === actionState && (
@@ -391,42 +419,4 @@ const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
 	);
 };
 
-const ResolutionMessage = ( { entry } ) => {
-	// Fetch user information based on userId.
-	const user = useSelect(
-		( select ) => {
-			if ( ! entry.userId ) {
-				return null;
-			}
-			return select( coreStore ).getUser( entry.userId );
-		},
-		[ entry.userId ]
-	);
-
-	const getActionMessage = ( action ) => {
-		if ( action === 'resolve' ) {
-			return __( 'Marked as resolved' );
-		} else if ( action === 'reopen' ) {
-			return __( 'Re-opened' );
-		}
-		return '';
-	};
-
-	return (
-		<VStack
-			className="editor-collab-sidebar-panel__resolution-message"
-			spacing="2"
-		>
-			<HStack alignment="left" spacing="3" justify="flex-start">
-				<CommentAuthorInfo
-					avatar={ user?.avatar_urls?.[ 48 ] }
-					name={ user?.name }
-					date={ entry.timestamp }
-				/>
-			</HStack>
-			<span className="editor-collab-sidebar-panel__user-comment editor-collab-sidebar-panel__resolution-text">
-				{ getActionMessage( entry.action ) }
-			</span>
-		</VStack>
-	);
-};
+export default Comments;

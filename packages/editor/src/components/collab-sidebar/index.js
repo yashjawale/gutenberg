@@ -110,16 +110,62 @@ function CollabSidebarContent( {
 		};
 
 		try {
-			await saveEntityRecord(
-				'root',
-				'comment',
-				{
-					id,
-					content,
-					status,
-				},
-				{ throwOnError: true }
-			);
+			// Handle resolution/reopening by creating new comments.
+			if ( status === 'approved' ) {
+				// Create a resolved comment.
+				await saveEntityRecord(
+					'root',
+					'comment',
+					{
+						post: currentPostId,
+						comment_type: 'block_comment_resolved',
+						comment_approved: 0,
+						parent: id,
+						content: content || '',
+					},
+					{ throwOnError: true }
+				);
+				// Update the original comment status.
+				await saveEntityRecord(
+					'root',
+					'comment',
+					{ id, status: 'approved' },
+					{ throwOnError: true }
+				);
+			} else if ( status === 'hold' ) {
+				// Create a reopened comment.
+				await saveEntityRecord(
+					'root',
+					'comment',
+					{
+						post: currentPostId,
+						comment_type: 'block_comment_reopened',
+						comment_approved: 0,
+						parent: id,
+						content: content || '',
+					},
+					{ throwOnError: true }
+				);
+				// Update the original comment status.
+				await saveEntityRecord(
+					'root',
+					'comment',
+					{ id, status: 'hold' },
+					{ throwOnError: true }
+				);
+			} else {
+				// Regular content update.
+				await saveEntityRecord(
+					'root',
+					'comment',
+					{
+						id,
+						content,
+						status,
+					},
+					{ throwOnError: true }
+				);
+			}
 			createNotice(
 				'snackbar',
 				messages[ messageType ] ?? __( 'Comment updated.' ),
