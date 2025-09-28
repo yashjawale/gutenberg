@@ -22,6 +22,7 @@ import {
 	store as blockEditorStore,
 	privateApis as blockEditorPrivateApis,
 } from '@wordpress/block-editor';
+import { store as coreStore } from '@wordpress/core-data';
 
 /**
  * Internal dependencies
@@ -387,5 +388,45 @@ const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
 				</ConfirmDialog>
 			) }
 		</>
+	);
+};
+
+const ResolutionMessage = ( { entry } ) => {
+	// Fetch user information based on userId.
+	const user = useSelect(
+		( select ) => {
+			if ( ! entry.userId ) {
+				return null;
+			}
+			return select( coreStore ).getUser( entry.userId );
+		},
+		[ entry.userId ]
+	);
+
+	const getActionMessage = ( action ) => {
+		if ( action === 'resolve' ) {
+			return __( 'Marked as resolved' );
+		} else if ( action === 'reopen' ) {
+			return __( 'Re-opened' );
+		}
+		return '';
+	};
+
+	return (
+		<VStack
+			className="editor-collab-sidebar-panel__resolution-message"
+			spacing="2"
+		>
+			<HStack alignment="left" spacing="3" justify="flex-start">
+				<CommentAuthorInfo
+					avatar={ user?.avatar_urls?.[ 48 ] }
+					name={ user?.name }
+					date={ entry.timestamp }
+				/>
+			</HStack>
+			<span className="editor-collab-sidebar-panel__user-comment editor-collab-sidebar-panel__resolution-text">
+				{ getActionMessage( entry.action ) }
+			</span>
+		</VStack>
 	);
 };
