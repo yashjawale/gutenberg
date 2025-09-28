@@ -75,69 +75,6 @@ function CollabSidebarContent( {
 	const { getSelectedBlockClientId } = useSelect( blockEditorStore );
 	const { updateBlockAttributes } = useDispatch( blockEditorStore );
 
-	/**
-	 * Updates the resolution history of a comment.
-	 *
-	 * @param {number}             commentId ID of the comment to update resolution history for.
-	 * @param {'approve'|'reject'} action    Action to take on the comment.
-	 *
-	 * @return {Promise<boolean>} True if resolution history was updated successfully, false otherwise.
-	 */
-	const updateResolutionHistory = async ( commentId, action ) => {
-		// Get current comment data and user info.
-		const { currentComment, currentUser } = await ( async () => {
-			const comment = await resolveSelect( coreStore ).getEntityRecord(
-				'root',
-				'comment',
-				commentId
-			);
-			const user = await resolveSelect( coreStore ).getCurrentUser();
-			return { currentComment: comment, currentUser: user };
-		} )();
-
-		if ( ! currentComment || ! currentUser ) {
-			return false;
-		}
-
-		// Find the main (parent) comment to store resolution history.
-		const mainCommentId = currentComment.parent || commentId;
-		const mainComment =
-			mainCommentId === commentId
-				? currentComment
-				: await resolveSelect( coreStore ).getEntityRecord(
-						'root',
-						'comment',
-						mainCommentId
-				  );
-
-		if ( ! mainComment ) {
-			return false;
-		}
-
-		// Create resolution entry.
-		const newResolutionEntry = {
-			action,
-			timestamp: new Date().toISOString(),
-			userId: currentUser.id,
-		};
-
-		// Get existing resolution history from main comment metadata and add new entry.
-		const existingMeta = mainComment.meta || {};
-		const existingHistory = existingMeta._resolution_history || [];
-		const updatedHistory = [ ...existingHistory, newResolutionEntry ];
-
-		// Save resolution history to main comment metadata.
-		const savedMainComment = await saveEntityRecord( 'root', 'comment', {
-			id: mainCommentId,
-			meta: {
-				...existingMeta,
-				_resolution_history: updatedHistory,
-			},
-		} );
-
-		return savedMainComment;
-	};
-
 	// Function to save the comment.
 	const onError = ( error ) => {
 		const errorMessage =
@@ -189,7 +126,6 @@ function CollabSidebarContent( {
 
 	const onCommentResolve = async ( commentId ) => {
 		try {
-			await updateResolutionHistory( commentId, 'resolve' );
 			await saveEntityRecord(
 				'root',
 				'comment',
@@ -210,7 +146,6 @@ function CollabSidebarContent( {
 
 	const onCommentReopen = async ( commentId ) => {
 		try {
-			await updateResolutionHistory( commentId, 'reopen' );
 			await saveEntityRecord(
 				'root',
 				'comment',
