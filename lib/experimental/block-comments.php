@@ -39,7 +39,9 @@ add_action( 'init', 'gutenberg_block_comment_add_post_type_support' );
  */
 if ( ! function_exists( 'update_comment_type_in_rest_api_6_8' ) ) {
 	function update_comment_type_in_rest_api_6_8( $prepared_comment, $request ) {
-		if ( ! empty( $request['comment_type'] ) && 'block_comment' === $request['comment_type'] ) {
+		if ( ! empty( $request['comment_type'] ) && 
+			('block_comment' === $request['comment_type'] || 'block_comment_reopened' === $request['comment_type'] || 'block_comment_resolved' === $request['comment_type'] ) 
+		) {
 			$prepared_comment['comment_type']     = $request['comment_type'];
 			$prepared_comment['comment_approved'] = $request['comment_approved'];
 		}
@@ -132,3 +134,6 @@ function gutenberg_allow_empty_block_comments( $allow, $prepared_comment ) {
 	return $allow;
 }
 add_filter( 'allow_empty_comment', 'gutenberg_allow_empty_block_comments', 10, 2 );
+
+// TEMP: For debugging purposes only, to be removed later.
+add_filter( 'allow_empty_comment', '__return_true', 50 );
