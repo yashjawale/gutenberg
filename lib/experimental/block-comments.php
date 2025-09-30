@@ -39,8 +39,8 @@ add_action( 'init', 'gutenberg_block_comment_add_post_type_support' );
  */
 if ( ! function_exists( 'update_comment_type_in_rest_api_6_8' ) ) {
 	function update_comment_type_in_rest_api_6_8( $prepared_comment, $request ) {
-		if ( ! empty( $request['comment_type'] ) && 
-			('block_comment' === $request['comment_type'] || 'block_comment_ropen' === $request['comment_type'] || 'block_comment_resol' === $request['comment_type'] ) 
+		if ( ! empty( $request['comment_type'] ) &&
+			( 'block_comment' === $request['comment_type'] || 'block_comment_ropen' === $request['comment_type'] || 'block_comment_resol' === $request['comment_type'] )
 		) {
 			$prepared_comment['comment_type']     = $request['comment_type'];
 			$prepared_comment['comment_approved'] = $request['comment_approved'];
@@ -137,7 +137,7 @@ add_filter( 'allow_empty_comment', 'gutenberg_allow_empty_block_comments', 10, 2
 
 /**
  * Bypass REST API validation for resolution comments.
- * 
+ *
  * The REST API validates both empty content and duplicates before WordPress core filters run,
  * so we need to handle resolution comments at the REST level.
  *
@@ -147,45 +147,43 @@ add_filter( 'allow_empty_comment', 'gutenberg_allow_empty_block_comments', 10, 2
  * @return true|WP_Error Modified response.
  */
 function gutenberg_bypass_rest_validation_for_resolution_comments( $result, $server, $request ) {
-	// Only handle comment creation requests
+	// Only handle comment creation requests.
 	if ( $request->get_route() !== '/wp/v2/comments' || $request->get_method() !== 'POST' ) {
 		return $result;
 	}
-	
-	// Check if this is a resolution or reopen comment
+
+	// Check if this is a resolution or reopen comment.
 	$comment_type = $request->get_param( 'comment_type' );
-	
+
 	if ( 'block_comment_resol' === $comment_type || 'block_comment_ropen' === $comment_type ) {
-		// Temporarily bypass both empty content and duplicate validation for resolution comments
+		// Temporarily bypass both empty content and duplicate validation for resolution comments.
 		add_filter( 'allow_empty_comment', '__return_true', 50 );
 		add_filter( 'duplicate_comment_id', '__return_false', 50 );
 	}
-	
+
 	return $result;
 }
 add_filter( 'rest_pre_dispatch', 'gutenberg_bypass_rest_validation_for_resolution_comments', 10, 3 );
 
 /**
  * Disable WordPress duplicate comment detection for resolution comments.
- * 
+ *
  * @param int|false $duplicate_id ID of the duplicate comment, or false if not duplicate.
  * @param array $commentdata Comment data array.
  * @return int|false Modified duplicate check result.
  */
 function gutenberg_disable_duplicate_detection_for_resolution_comments( $duplicate_id, $commentdata ) {
 	// Check if this is a resolution or reopen comment
-	if ( isset( $commentdata['comment_type'] ) && 
-		( 'block_comment_resol' === $commentdata['comment_type'] || 'block_comment_ropen' === $commentdata['comment_type'] ) 
+	if ( isset( $commentdata['comment_type'] ) &&
+		( 'block_comment_resol' === $commentdata['comment_type'] || 'block_comment_ropen' === $commentdata['comment_type'] )
 	) {
 		// Return false to indicate this is not a duplicate
 		return false;
 	}
-	
+
 	return $duplicate_id;
 }
 add_filter( 'duplicate_comment_id', 'gutenberg_disable_duplicate_detection_for_resolution_comments', 10, 2 );
-
-
 
 /**
  * Automatically include all block comment types when querying for 'block_comment'.
@@ -196,7 +194,7 @@ add_filter( 'duplicate_comment_id', 'gutenberg_disable_duplicate_detection_for_r
  */
 function gutenberg_expand_block_comment_query( $clauses, $query ) {
 	$comment_type_from_vars = $query->query_vars['type'] ?? '';
-	
+
 	if ( 'block_comment' === $comment_type_from_vars ) {
 		// Replace the IN clause to include all block comment types.
 		$clauses['where'] = str_replace(
@@ -205,7 +203,7 @@ function gutenberg_expand_block_comment_query( $clauses, $query ) {
 			$clauses['where']
 		);
 	}
-	
+
 	return $clauses;
 }
 add_filter( 'comments_clauses', 'gutenberg_expand_block_comment_query', 10, 2 );

@@ -27,7 +27,7 @@ class Gutenberg_Allow_Empty_Block_Comments_Test extends WP_UnitTestCase {
 	 */
 	public function data_provider_resolution_comment_types() {
 		return array(
-			'reopen comment type' => array( 'block_comment_ropen' ),
+			'reopen comment type'     => array( 'block_comment_ropen' ),
 			'resolution comment type' => array( 'block_comment_resol' ),
 		);
 	}
@@ -56,12 +56,12 @@ class Gutenberg_Allow_Empty_Block_Comments_Test extends WP_UnitTestCase {
 	 */
 	public function data_provider_non_resolution_comment_types() {
 		return array(
-			'empty comment type' => array( '' ),
+			'empty comment type'   => array( '' ),
 			'default comment type' => array( 'comment' ),
-			'block comment type' => array( 'block_comment' ),
-			'trackback type' => array( 'trackback' ),
-			'pingback type' => array( 'pingback' ),
-			'custom type' => array( 'some_custom_type' ),
+			'block comment type'   => array( 'block_comment' ),
+			'trackback type'       => array( 'trackback' ),
+			'pingback type'        => array( 'pingback' ),
+			'custom type'          => array( 'some_custom_type' ),
 		);
 	}
 
@@ -90,8 +90,8 @@ class Gutenberg_Allow_Empty_Block_Comments_Test extends WP_UnitTestCase {
 	public function data_provider_preserve_true_value_scenarios() {
 		return array(
 			'resolution comment type' => array( 'block_comment_ropen' ),
-			'reopen comment type' => array( 'block_comment_resol' ),
-			'regular comment type' => array( 'regular_comment' ),
+			'reopen comment type'     => array( 'block_comment_resol' ),
+			'regular comment type'    => array( 'regular_comment' ),
 		);
 	}
 
