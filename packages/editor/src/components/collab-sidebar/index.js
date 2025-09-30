@@ -112,14 +112,20 @@ function CollabSidebarContent( {
 
 		try {
 			// Handle resolution/reopening by creating new comments.
-			if ( status === 'approved' ) {
-				// Create a resolved comment.
+			if ( status === 'approved' || status === 'hold' ) {
+				const commentType =
+					status === 'approved'
+						? 'block_comment_resol'
+						: 'block_comment_ropen';
+				const approvalStatus =
+					status === 'approved' ? 'approved' : 'hold';
+
 				await saveEntityRecord(
 					'root',
 					'comment',
 					{
 						post: currentPostId,
-						comment_type: 'block_comment_resol',
+						comment_type: commentType,
 						comment_approved: 0,
 						parent: id,
 						content: content || '',
@@ -130,28 +136,7 @@ function CollabSidebarContent( {
 				await saveEntityRecord(
 					'root',
 					'comment',
-					{ id, status: 'approved' },
-					{ throwOnError: true }
-				);
-			} else if ( status === 'hold' ) {
-				// Create a reopened comment.
-				await saveEntityRecord(
-					'root',
-					'comment',
-					{
-						post: currentPostId,
-						comment_type: 'block_comment_ropen',
-						comment_approved: 0,
-						parent: id,
-						content: content || '',
-					},
-					{ throwOnError: true }
-				);
-				// Update the original comment status.
-				await saveEntityRecord(
-					'root',
-					'comment',
-					{ id, status: 'hold' },
+					{ id, status: approvalStatus },
 					{ throwOnError: true }
 				);
 			} else {
