@@ -216,15 +216,19 @@ function Thread( {
 						<CommentForm
 							onSubmit={ ( inputComment ) => {
 								if ( 'approved' === thread.status ) {
+									// For reopening, include the content in the reopen action.
 									onEditComment( {
 										id: thread.id,
 										status: 'hold',
+										content: inputComment,
+									} );
+								} else {
+									// For regular replies, add as separate comment.
+									onAddReply( {
+										content: inputComment,
+										parent: thread.id,
 									} );
 								}
-								onAddReply( {
-									content: inputComment,
-									parent: thread.id,
-								} );
 							} }
 							onCancel={ ( event ) => {
 								event.stopPropagation(); // Prevent the parent onClick from being triggered
@@ -393,12 +397,28 @@ const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
 					) }
 				>
 					{ isResolutionComment
-						? ( thread.type === 'block_comment_resol'
-								? __( 'Marked as resolved' )
-								: __( 'Re-opened' ) ) +
-						  ( thread?.content?.rendered
-								? ': ' + thread.content.rendered
-								: '' )
+						? ( () => {
+								const actionText =
+									thread.type === 'block_comment_resol'
+										? __( 'Marked as resolved' )
+										: __( 'Re-opened' );
+								const content = thread?.content?.raw;
+
+								if (
+									content &&
+									typeof content === 'string' &&
+									content.trim() !== ''
+								) {
+									return sprintf(
+										// translators: %1$s: action, %2$s: content.
+										__( '%1$s: %2$s' ),
+										actionText,
+										content
+									);
+								}
+								// If no content, just show the action.
+								return actionText;
+						  } )()
 						: thread?.content?.rendered }
 				</RawHTML>
 			) }

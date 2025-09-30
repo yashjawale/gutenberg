@@ -21,7 +21,6 @@ export function useBlockComments( postId ) {
 		{ enabled: !! postId && typeof postId === 'number' }
 	);
 
-
 	const blocksWithComments = useSelect( ( select ) => {
 		const { getBlockAttributes, getClientIdsWithDescendants } =
 			select( blockEditorStore );
