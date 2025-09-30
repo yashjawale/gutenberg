@@ -135,8 +135,57 @@ function gutenberg_allow_empty_block_comments( $allow, $prepared_comment ) {
 }
 add_filter( 'allow_empty_comment', 'gutenberg_allow_empty_block_comments', 10, 2 );
 
-// TEMP: For debugging purposes only, to be removed later.
-add_filter( 'allow_empty_comment', '__return_true', 50 );
+/**
+ * Bypass REST API validation for resolution comments.
+ * 
+ * The REST API validates both empty content and duplicates before WordPress core filters run,
+ * so we need to handle resolution comments at the REST level.
+ *
+ * @param true|WP_Error $result Response to replace the request with.
+ * @param WP_REST_Server $server Server instance.
+ * @param WP_REST_Request $request Request used to generate the response.
+ * @return true|WP_Error Modified response.
+ */
+function gutenberg_bypass_rest_validation_for_resolution_comments( $result, $server, $request ) {
+	// Only handle comment creation requests
+	if ( $request->get_route() !== '/wp/v2/comments' || $request->get_method() !== 'POST' ) {
+		return $result;
+	}
+	
+	// Check if this is a resolution or reopen comment
+	$comment_type = $request->get_param( 'comment_type' );
+	
+	if ( 'block_comment_resol' === $comment_type || 'block_comment_ropen' === $comment_type ) {
+		// Temporarily bypass both empty content and duplicate validation for resolution comments
+		add_filter( 'allow_empty_comment', '__return_true', 50 );
+		add_filter( 'duplicate_comment_id', '__return_false', 50 );
+	}
+	
+	return $result;
+}
+add_filter( 'rest_pre_dispatch', 'gutenberg_bypass_rest_validation_for_resolution_comments', 10, 3 );
+
+/**
+ * Disable WordPress duplicate comment detection for resolution comments.
+ * 
+ * @param int|false $duplicate_id ID of the duplicate comment, or false if not duplicate.
+ * @param array $commentdata Comment data array.
+ * @return int|false Modified duplicate check result.
+ */
+function gutenberg_disable_duplicate_detection_for_resolution_comments( $duplicate_id, $commentdata ) {
+	// Check if this is a resolution or reopen comment
+	if ( isset( $commentdata['comment_type'] ) && 
+		( 'block_comment_resol' === $commentdata['comment_type'] || 'block_comment_ropen' === $commentdata['comment_type'] ) 
+	) {
+		// Return false to indicate this is not a duplicate
+		return false;
+	}
+	
+	return $duplicate_id;
+}
+add_filter( 'duplicate_comment_id', 'gutenberg_disable_duplicate_detection_for_resolution_comments', 10, 2 );
+
+
 
 /**
  * Automatically include all block comment types when querying for 'block_comment'.
