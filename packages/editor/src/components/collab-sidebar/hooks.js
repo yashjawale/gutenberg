@@ -7,61 +7,20 @@ import { useSelect } from '@wordpress/data';
 import { store as blockEditorStore } from '@wordpress/block-editor';
 
 export function useBlockComments( postId ) {
-	// Make separate queries for each comment type.
-	const blockCommentsQuery = {
+	const queryArgs = {
 		post: postId,
 		type: 'block_comment',
 		status: 'all',
 		per_page: 100,
 	};
 
-	const resolvedCommentsQuery = {
-		post: postId,
-		type: 'block_comment_resol',
-		status: 'all',
-		per_page: 100,
-	};
-
-	const reopenedCommentsQuery = {
-		post: postId,
-		type: 'block_comment_ropen',
-		status: 'all',
-		per_page: 100,
-	};
-
-	const { records: blockComments } = useEntityRecords(
+	const { records: threads, totalPages } = useEntityRecords(
 		'root',
 		'comment',
-		blockCommentsQuery,
+		queryArgs,
 		{ enabled: !! postId && typeof postId === 'number' }
 	);
 
-	const { records: resolvedComments } = useEntityRecords(
-		'root',
-		'comment',
-		resolvedCommentsQuery,
-		{ enabled: !! postId && typeof postId === 'number' }
-	);
-
-	const { records: reopenedComments, totalPages } = useEntityRecords(
-		'root',
-		'comment',
-		reopenedCommentsQuery,
-		{ enabled: !! postId && typeof postId === 'number' }
-	);
-
-	// Combine all comment types
-	const threads = useMemo( () => {
-		const allComments = [
-			...( blockComments || [] ),
-			...( resolvedComments || [] ),
-			...( reopenedComments || [] ),
-		];
-
-		// TEMP: For debugging purposes only, to be removed later.
-		console.log( allComments );
-		return allComments;
-	}, [ blockComments, resolvedComments, reopenedComments ] );
 
 	const blocksWithComments = useSelect( ( select ) => {
 		const { getBlockAttributes, getClientIdsWithDescendants } =

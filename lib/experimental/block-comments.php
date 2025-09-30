@@ -137,3 +137,26 @@ add_filter( 'allow_empty_comment', 'gutenberg_allow_empty_block_comments', 10, 2
 
 // TEMP: For debugging purposes only, to be removed later.
 add_filter( 'allow_empty_comment', '__return_true', 50 );
+
+/**
+ * Automatically include all block comment types when querying for 'block_comment'.
+ *
+ * @param array            $clauses Array of comment query clauses.
+ * @param WP_Comment_Query $query   The comment query object.
+ * @return array Modified clauses.
+ */
+function gutenberg_expand_block_comment_query( $clauses, $query ) {
+	$comment_type_from_vars = $query->query_vars['type'] ?? '';
+	
+	if ( 'block_comment' === $comment_type_from_vars ) {
+		// Replace the IN clause to include all block comment types.
+		$clauses['where'] = str_replace(
+			"comment_type IN ('block_comment')",
+			"comment_type IN ('block_comment', 'block_comment_resol', 'block_comment_ropen')",
+			$clauses['where']
+		);
+	}
+	
+	return $clauses;
+}
+add_filter( 'comments_clauses', 'gutenberg_expand_block_comment_query', 10, 2 );
