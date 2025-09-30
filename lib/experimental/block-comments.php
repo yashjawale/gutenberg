@@ -40,7 +40,7 @@ add_action( 'init', 'gutenberg_block_comment_add_post_type_support' );
 if ( ! function_exists( 'update_comment_type_in_rest_api_6_8' ) ) {
 	function update_comment_type_in_rest_api_6_8( $prepared_comment, $request ) {
 		if ( ! empty( $request['comment_type'] ) && 
-			('block_comment' === $request['comment_type'] || 'block_comment_reopened' === $request['comment_type'] || 'block_comment_resolved' === $request['comment_type'] ) 
+			('block_comment' === $request['comment_type'] || 'block_comment_ropen' === $request['comment_type'] || 'block_comment_resol' === $request['comment_type'] ) 
 		) {
 			$prepared_comment['comment_type']     = $request['comment_type'];
 			$prepared_comment['comment_approved'] = $request['comment_approved'];
@@ -117,7 +117,7 @@ function gutenberg_filter_comment_count_query_exclude_block_comments( $query ) {
 add_filter( 'query', 'gutenberg_filter_comment_count_query_exclude_block_comments' );
 
 /**
- * Enable empty comments when the comment_type is 'block_comment_reopened' or 'block_comment_resolved'.
+ * Enable empty comments when the comment_type is 'block_comment_ropen' or 'block_comment_resol'.
  *
  * @param bool  $allow            Whether to allow an empty comment.
  * @param array $prepared_comment The prepared comment data.
@@ -126,8 +126,8 @@ add_filter( 'query', 'gutenberg_filter_comment_count_query_exclude_block_comment
 function gutenberg_allow_empty_block_comments( $allow, $prepared_comment ) {
 	if (
 		isset( $prepared_comment['comment_type'] ) &&
-		'block_comment_reopened' === $prepared_comment['comment_type'] ||
-		'block_comment_resolved' === $prepared_comment['comment_type']
+		'block_comment_ropen' === $prepared_comment['comment_type'] ||
+		'block_comment_resol' === $prepared_comment['comment_type']
 	) {
 		$allow = true;
 	}

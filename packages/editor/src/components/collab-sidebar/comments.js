@@ -267,8 +267,8 @@ const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
 
 	// Check if this is a resolution comment.
 	const isResolutionComment =
-		thread.type === 'block_comment_resolved' ||
-		thread.type === 'block_comment_reopened';
+		thread.type === 'block_comment_resol' ||
+		thread.type === 'block_comment_ropen';
 
 	const actions = [
 		onEdit &&
@@ -393,7 +393,7 @@ const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
 					) }
 				>
 					{ isResolutionComment
-						? ( thread.type === 'block_comment_resolved'
+						? ( thread.type === 'block_comment_resol'
 								? __( 'Marked as resolved' )
 								: __( 'Re-opened' ) ) +
 						  ( thread?.content?.rendered
@@ -410,7 +410,7 @@ const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
 					confirmButtonText={ __( 'Delete' ) }
 				>
 					{
-						// translators: message displayed when confirming an action
+						// translators: message displayed when confirming an action.
 						__( 'Are you sure you want to delete this comment?' )
 					}
 				</ConfirmDialog>

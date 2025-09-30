@@ -118,7 +118,7 @@ function CollabSidebarContent( {
 					'comment',
 					{
 						post: currentPostId,
-						comment_type: 'block_comment_resolved',
+						comment_type: 'block_comment_resol',
 						comment_approved: 0,
 						parent: id,
 						content: content || '',
@@ -139,7 +139,7 @@ function CollabSidebarContent( {
 					'comment',
 					{
 						post: currentPostId,
-						comment_type: 'block_comment_reopened',
+						comment_type: 'block_comment_ropen',
 						comment_approved: 0,
 						parent: id,
 						content: content || '',

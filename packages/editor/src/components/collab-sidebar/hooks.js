@@ -17,14 +17,14 @@ export function useBlockComments( postId ) {
 
 	const resolvedCommentsQuery = {
 		post: postId,
-		type: 'block_comment_resolved',
+		type: 'block_comment_resol',
 		status: 'all',
 		per_page: 100,
 	};
 
 	const reopenedCommentsQuery = {
 		post: postId,
-		type: 'block_comment_reopened',
+		type: 'block_comment_ropen',
 		status: 'all',
 		per_page: 100,
 	};

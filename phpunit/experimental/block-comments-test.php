@@ -21,11 +21,11 @@ class Gutenberg_Allow_Empty_Block_Comments_Test extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Tests that empty comments are allowed for block_comment_reopened type.
+	 * Tests that empty comments are allowed for block_comment_ropen type.
 	 */
-	public function test_allows_empty_comment_for_block_comment_reopened() {
+	public function test_allows_empty_comment_for_block_comment_ropen() {
 		$prepared_comment = array(
-			'comment_type' => 'block_comment_reopened',
+			'comment_type' => 'block_comment_ropen',
 		);
 
 		$result = gutenberg_allow_empty_block_comments( false, $prepared_comment );
@@ -34,11 +34,11 @@ class Gutenberg_Allow_Empty_Block_Comments_Test extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Tests that empty comments are allowed for block_comment_resolved type.
+	 * Tests that empty comments are allowed for block_comment_resol type.
 	 */
-	public function test_allows_empty_comment_for_block_comment_resolved() {
+	public function test_allows_empty_comment_for_block_comment_resol() {
 		$prepared_comment = array(
-			'comment_type' => 'block_comment_resolved',
+			'comment_type' => 'block_comment_resol',
 		);
 
 		$result = gutenberg_allow_empty_block_comments( false, $prepared_comment );
@@ -75,7 +75,7 @@ class Gutenberg_Allow_Empty_Block_Comments_Test extends WP_UnitTestCase {
 	 */
 	public function test_preserves_original_true_value() {
 		$prepared_comment = array(
-			'comment_type' => 'block_comment_reopened',
+			'comment_type' => 'block_comment_ropen',
 		);
 
 		$result = gutenberg_allow_empty_block_comments( true, $prepared_comment );
