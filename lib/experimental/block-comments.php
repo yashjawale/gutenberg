@@ -176,7 +176,7 @@ function gutenberg_disable_duplicate_detection_for_resolution_comments( $duplica
 	if ( isset( $commentdata['comment_type'] ) &&
 		( 'block_comment_resol' === $commentdata['comment_type'] || 'block_comment_ropen' === $commentdata['comment_type'] )
 	) {
-		// Return false to indicate this is not a duplicate
+		// Return false to indicate this is not a duplicate.
 		return false;
 	}
 
