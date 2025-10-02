@@ -483,7 +483,7 @@ const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
 								const actionText =
 									thread.type === 'block_comment_resol'
 										? __( 'Marked as resolved' )
-										: __( 'Re-opened' );
+										: __( 'Reopened' );
 								const content = thread?.content?.raw;
 
 								if (
