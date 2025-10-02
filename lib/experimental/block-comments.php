@@ -173,7 +173,6 @@ add_filter( 'rest_pre_dispatch', 'gutenberg_bypass_rest_validation_for_resolutio
  * @return int|false Modified duplicate check result.
  */
 function gutenberg_disable_duplicate_detection_for_resolution_comments( $duplicate_id, $commentdata ) {
-	// Check if this is a resolution or reopen comment
 	if ( isset( $commentdata['comment_type'] ) &&
 		( 'block_comment_resol' === $commentdata['comment_type'] || 'block_comment_ropen' === $commentdata['comment_type'] )
 	) {
