@@ -434,31 +434,31 @@ const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
 								} }
 							/>
 						) }
-						<Menu placement="bottom-end">
-							<Menu.TriggerButton
-								render={
-									<Button
-										size="small"
-										icon={ moreVertical }
-										label={ __( 'Actions' ) }
-										disabled={ ! moreActions.length }
-										accessibleWhenDisabled
-									/>
-								}
-							/>
-							<Menu.Popover>
-								{ moreActions.map( ( action ) => (
-									<Menu.Item
-										key={ action.id }
-										onClick={ () => action.onClick() }
-									>
-										<Menu.ItemLabel>
-											{ action.title }
-										</Menu.ItemLabel>
-									</Menu.Item>
-								) ) }
-							</Menu.Popover>
-						</Menu>
+						{ moreActions.length > 0 && (
+							<Menu placement="bottom-end">
+								<Menu.TriggerButton
+									render={
+										<Button
+											size="small"
+											icon={ moreVertical }
+											label={ __( 'Actions' ) }
+										/>
+									}
+								/>
+								<Menu.Popover>
+									{ moreActions.map( ( action ) => (
+										<Menu.Item
+											key={ action.id }
+											onClick={ () => action.onClick() }
+										>
+											<Menu.ItemLabel>
+												{ action.title }
+											</Menu.ItemLabel>
+										</Menu.Item>
+									) ) }
+								</Menu.Popover>
+							</Menu>
+						) }
 					</HStack>
 				</FlexItem>
 			</HStack>
