@@ -47,7 +47,6 @@ function CollabSidebarContent( {
 			};
 		}, [] );
 
-	// Function to save the comment.
 	const onError = ( error ) => {
 		const errorMessage =
 			error.message && error.code !== 'unknown_error'

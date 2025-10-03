@@ -512,7 +512,6 @@ const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
 					confirmButtonText={ __( 'Delete' ) }
 				>
 					{
-						// translators: message displayed when confirming an action.
 						__( 'Are you sure you want to delete this comment?' )
 					}
 				</ConfirmDialog>
