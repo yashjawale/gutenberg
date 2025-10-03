@@ -232,7 +232,11 @@ function Thread( {
 							thread={ reply }
 							onEdit={
 								'approved' !== thread.status &&
-								reply.type === 'block_comment'
+								( reply.type === 'block_comment' ||
+									( reply.type === 'block_comment_ropen' &&
+										reply?.content?.raw &&
+										typeof reply.content.raw === 'string' &&
+										reply.content.raw.trim() !== '' ) )
 									? onEditComment
 									: undefined
 							}
@@ -270,7 +274,10 @@ function Thread( {
 					thread={ lastReply }
 					onEdit={
 						'approved' !== thread.status &&
-						lastReply.type === 'block_comment'
+						( lastReply.type === 'block_comment' ||
+							( lastReply.type === 'block_comment_ropen' &&
+								lastReply?.content?.raw &&
+								lastReply.content.raw.trim() !== '' ) )
 							? onEditComment
 							: undefined
 					}
@@ -353,10 +360,16 @@ const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
 		thread.type === 'block_comment_resol' ||
 		thread.type === 'block_comment_ropen';
 
+	// Check if this is a reopen comment with content that should be editable.
+	const isEditableReopenComment =
+		thread.type === 'block_comment_ropen' &&
+		thread?.content?.raw &&
+		thread.content.raw.trim() !== '';
+
 	const actions = [
 		onEdit &&
 			status !== 'approved' &&
-			! isResolutionComment && {
+			( ! isResolutionComment || isEditableReopenComment ) && {
 				id: 'edit',
 				title: _x( 'Edit', 'Edit comment' ),
 				onClick: () => {
@@ -511,9 +524,7 @@ const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
 					onCancel={ handleCancel }
 					confirmButtonText={ __( 'Delete' ) }
 				>
-					{
-						__( 'Are you sure you want to delete this comment?' )
-					}
+					{ __( 'Are you sure you want to delete this comment?' ) }
 				</ConfirmDialog>
 			) }
 		</>
