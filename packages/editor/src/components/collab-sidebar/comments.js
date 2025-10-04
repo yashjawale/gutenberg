@@ -233,10 +233,7 @@ function Thread( {
 							onEdit={
 								'approved' !== thread.status &&
 								( reply.type === 'block_comment' ||
-									( reply.type === 'block_comment_ropen' &&
-										reply?.content?.raw &&
-										typeof reply.content.raw === 'string' &&
-										reply.content.raw.trim() !== '' ) )
+									reply.type === 'block_comment_ropen' )
 									? onEditComment
 									: undefined
 							}
@@ -275,9 +272,7 @@ function Thread( {
 					onEdit={
 						'approved' !== thread.status &&
 						( lastReply.type === 'block_comment' ||
-							( lastReply.type === 'block_comment_ropen' &&
-								lastReply?.content?.raw &&
-								lastReply.content.raw.trim() !== '' ) )
+							lastReply.type === 'block_comment_ropen' )
 							? onEditComment
 							: undefined
 					}
