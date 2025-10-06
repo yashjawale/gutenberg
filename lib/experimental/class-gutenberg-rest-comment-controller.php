@@ -236,6 +236,11 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 			$prepared_args['update_comment_meta_cache'] = false;
 		}
 
+		// [backport] -- include all block comment types.
+		if ( 'block_comment' === $prepared_args['type'] ) {
+			$prepared_args['type'] = self::ALLOWED_COMMENT_TYPES;
+		}
+
 		/**
 		 * Filters WP_Comment_Query arguments when querying comments via the REST API.
 		 *
