@@ -324,7 +324,7 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 		if ( ! empty( $request['id'] ) ) {
 			return new WP_Error(
 				'rest_comment_exists',
-				__( 'Cannot create existing comment.' ),
+				__( 'Cannot create existing comment.', 'gutenberg' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -333,7 +333,7 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 		if ( ! empty( $request['type'] ) && ! in_array( $request['type'], self::ALLOWED_COMMENT_TYPES, true ) ) {
 			return new WP_Error(
 				'rest_invalid_comment_type',
-				__( 'Cannot create a comment with that type.' ),
+				__( 'Cannot create a comment with that type.', 'gutenberg' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -353,7 +353,7 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 		if ( ! $this->check_is_comment_content_allowed( $prepared_comment ) ) {
 			return new WP_Error(
 				'rest_comment_content_invalid',
-				__( 'Invalid comment content.' ),
+				__( 'Invalid comment content.', 'gutenberg' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -383,7 +383,7 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 			if ( empty( $prepared_comment['comment_author'] ) || empty( $prepared_comment['comment_author_email'] ) ) {
 				return new WP_Error(
 					'rest_comment_author_data_required',
-					__( 'Creating a comment requires valid author name and email values.' ),
+					__( 'Creating a comment requires valid author name and email values.', 'gutenberg' ),
 					array( 'status' => 400 )
 				);
 			}
@@ -407,7 +407,7 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 			$error_code = $check_comment_lengths->get_error_code();
 			return new WP_Error(
 				$error_code,
-				__( 'Comment field exceeds maximum length allowed.' ),
+				__( 'Comment field exceeds maximum length allowed.', 'gutenberg' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -461,7 +461,7 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 		if ( ! $comment_id ) {
 			return new WP_Error(
 				'rest_comment_failed_create',
-				__( 'Creating comment failed.' ),
+				__( 'Creating comment failed.', 'gutenberg' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -567,7 +567,6 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 		 */
 		return '' !== $check['comment_content'];
 	}
-
 }
 
 add_action(
