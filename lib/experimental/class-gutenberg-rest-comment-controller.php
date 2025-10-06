@@ -547,6 +547,15 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 			return true;
 		}
 
+		// [backport].
+		if (
+			isset( $prepared_comment['comment_type'] ) &&
+			'block_comment_ropen' === $prepared_comment['comment_type'] ||
+			'block_comment_resol' === $prepared_comment['comment_type']
+		) {
+			return true;
+		}
+
 		/*
 		 * Do not allow a comment to be created with missing or empty
 		 * comment_content. See wp_handle_comment_submission().
