@@ -9,6 +9,12 @@
 // Create a new class that extends WP_REST_Comments_Controller
 class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 
+	const ALLOWED_COMMENT_TYPES = array(
+		'block_comment',
+		'block_comment_ropen',
+		'block_comment_resol',
+	);
+
 	public function create_item_permissions_check( $request ) {
 		if ( empty( $request['comment_type'] ) || 'comment' === $request['comment_type'] ) {
 			return parent::create_item_permissions_check( $request );
@@ -318,8 +324,8 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 			);
 		}
 
-		// Do not allow comments to be created with a non-default type.
-		if ( ! empty( $request['type'] ) && 'comment' !== $request['type'] ) {
+		// Do not allow comments to be created with a non-default type [backport].
+		if ( ! empty( $request['type'] ) && ! in_array( $request['type'], self::ALLOWED_COMMENT_TYPES, true ) ) {
 			return new WP_Error(
 				'rest_invalid_comment_type',
 				__( 'Cannot create a comment with that type.' ),
@@ -332,7 +338,8 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 			return $prepared_comment;
 		}
 
-		$prepared_comment['comment_type'] = 'comment';
+		// [backport].
+		$prepared_comment['comment_type'] = $request['type'];
 
 		if ( ! isset( $prepared_comment['comment_content'] ) ) {
 			$prepared_comment['comment_content'] = '';
@@ -400,7 +407,8 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 			);
 		}
 
-		$prepared_comment['comment_approved'] = wp_allow_comment( $prepared_comment, true );
+		// [backport].
+		$prepared_comment['comment_approved'] = $request['comment_approved'];
 
 		if ( is_wp_error( $prepared_comment['comment_approved'] ) ) {
 			$error_code    = $prepared_comment['comment_approved']->get_error_code();
