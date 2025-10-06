@@ -142,6 +142,410 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 		}
 		return true;
 	}
+
+	/**
+	 * Retrieves a list of block comment items.
+	 *
+	 * @since 4.7.0
+	 *
+	 * @param WP_REST_Request $request Full details about the request.
+	 * @return WP_REST_Response|WP_Error Response object on success, or error object on failure.
+	 */
+	public function get_items( $request ) {
+
+		// Retrieve the list of registered collection query parameters.
+		$registered = $this->get_collection_params();
+
+		/*
+		 * This array defines mappings between public API query parameters whose
+		 * values are accepted as-passed, and their internal WP_Query parameter
+		 * name equivalents (some are the same). Only values which are also
+		 * present in $registered will be set.
+		 */
+		$parameter_mappings = array(
+			'author'         => 'author__in',
+			'author_email'   => 'author_email',
+			'author_exclude' => 'author__not_in',
+			'exclude'        => 'comment__not_in',
+			'include'        => 'comment__in',
+			'offset'         => 'offset',
+			'order'          => 'order',
+			'parent'         => 'parent__in',
+			'parent_exclude' => 'parent__not_in',
+			'per_page'       => 'number',
+			'post'           => 'post__in',
+			'search'         => 'search',
+			'status'         => 'status',
+			'type'           => 'type',
+		);
+
+		$prepared_args = array();
+
+		/*
+		 * For each known parameter which is both registered and present in the request,
+		 * set the parameter's value on the query $prepared_args.
+		 */
+		foreach ( $parameter_mappings as $api_param => $wp_param ) {
+			if ( isset( $registered[ $api_param ], $request[ $api_param ] ) ) {
+				$prepared_args[ $wp_param ] = $request[ $api_param ];
+			}
+		}
+
+		// Ensure certain parameter values default to empty strings.
+		foreach ( array( 'author_email', 'search' ) as $param ) {
+			if ( ! isset( $prepared_args[ $param ] ) ) {
+				$prepared_args[ $param ] = '';
+			}
+		}
+
+		if ( isset( $registered['orderby'] ) ) {
+			$prepared_args['orderby'] = $this->normalize_query_param( $request['orderby'] );
+		}
+
+		$prepared_args['no_found_rows'] = false;
+
+		$prepared_args['update_comment_post_cache'] = true;
+
+		$prepared_args['date_query'] = array();
+
+		// Set before into date query. Date query must be specified as an array of an array.
+		if ( isset( $registered['before'], $request['before'] ) ) {
+			$prepared_args['date_query'][0]['before'] = $request['before'];
+		}
+
+		// Set after into date query. Date query must be specified as an array of an array.
+		if ( isset( $registered['after'], $request['after'] ) ) {
+			$prepared_args['date_query'][0]['after'] = $request['after'];
+		}
+
+		if ( isset( $registered['page'] ) && empty( $request['offset'] ) ) {
+			$prepared_args['offset'] = $prepared_args['number'] * ( absint( $request['page'] ) - 1 );
+		}
+
+		$is_head_request = $request->is_method( 'HEAD' );
+		if ( $is_head_request ) {
+			// Force the 'fields' argument. For HEAD requests, only post IDs are required to calculate pagination.
+			$prepared_args['fields'] = 'ids';
+			// Disable priming comment meta for HEAD requests to improve performance.
+			$prepared_args['update_comment_meta_cache'] = false;
+		}
+
+		/**
+		 * Filters WP_Comment_Query arguments when querying comments via the REST API.
+		 *
+		 * @since 4.7.0
+		 *
+		 * @link https://developer.wordpress.org/reference/classes/wp_comment_query/
+		 *
+		 * @param array           $prepared_args Array of arguments for WP_Comment_Query.
+		 * @param WP_REST_Request $request       The REST API request.
+		 */
+		$prepared_args = apply_filters( 'rest_comment_query', $prepared_args, $request );
+
+		$query        = new WP_Comment_Query();
+		$query_result = $query->query( $prepared_args );
+
+		if ( ! $is_head_request ) {
+			$comments = array();
+
+			foreach ( $query_result as $comment ) {
+				if ( ! $this->check_read_permission( $comment, $request ) ) {
+					continue;
+				}
+
+				$data       = $this->prepare_item_for_response( $comment, $request );
+				$comments[] = $this->prepare_response_for_collection( $data );
+			}
+		}
+
+		$total_comments = (int) $query->found_comments;
+		$max_pages      = (int) $query->max_num_pages;
+
+		if ( $total_comments < 1 ) {
+			// Out-of-bounds, run the query again without LIMIT for total count.
+			unset( $prepared_args['number'], $prepared_args['offset'] );
+
+			$query                    = new WP_Comment_Query();
+			$prepared_args['count']   = true;
+			$prepared_args['orderby'] = 'none';
+
+			$total_comments = $query->query( $prepared_args );
+			$max_pages      = (int) ceil( $total_comments / $request['per_page'] );
+		}
+
+		$response = $is_head_request ? new WP_REST_Response( array() ) : rest_ensure_response( $comments );
+		$response->header( 'X-WP-Total', $total_comments );
+		$response->header( 'X-WP-TotalPages', $max_pages );
+
+		$base = add_query_arg( urlencode_deep( $request->get_query_params() ), rest_url( sprintf( '%s/%s', $this->namespace, $this->rest_base ) ) );
+
+		if ( $request['page'] > 1 ) {
+			$prev_page = $request['page'] - 1;
+
+			if ( $prev_page > $max_pages ) {
+				$prev_page = $max_pages;
+			}
+
+			$prev_link = add_query_arg( 'page', $prev_page, $base );
+			$response->link_header( 'prev', $prev_link );
+		}
+
+		if ( $max_pages > $request['page'] ) {
+			$next_page = $request['page'] + 1;
+			$next_link = add_query_arg( 'page', $next_page, $base );
+
+			$response->link_header( 'next', $next_link );
+		}
+
+		return $response;
+	}
+
+
+	/**
+	 * Creates a block comment.
+	 *
+	 * @since 6.9.0
+	 *
+	 * @param WP_REST_Request $request Full details about the request.
+	 * @return WP_REST_Response|WP_Error Response object on success, or error object on failure.
+	 */
+	public function create_item( $request ) {
+		if ( ! empty( $request['id'] ) ) {
+			return new WP_Error(
+				'rest_comment_exists',
+				__( 'Cannot create existing comment.' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		// Do not allow comments to be created with a non-default type.
+		if ( ! empty( $request['type'] ) && 'comment' !== $request['type'] ) {
+			return new WP_Error(
+				'rest_invalid_comment_type',
+				__( 'Cannot create a comment with that type.' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$prepared_comment = $this->prepare_item_for_database( $request );
+		if ( is_wp_error( $prepared_comment ) ) {
+			return $prepared_comment;
+		}
+
+		$prepared_comment['comment_type'] = 'comment';
+
+		if ( ! isset( $prepared_comment['comment_content'] ) ) {
+			$prepared_comment['comment_content'] = '';
+		}
+
+		if ( ! $this->check_is_comment_content_allowed( $prepared_comment ) ) {
+			return new WP_Error(
+				'rest_comment_content_invalid',
+				__( 'Invalid comment content.' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		// Setting remaining values before wp_insert_comment so we can use wp_allow_comment().
+		if ( ! isset( $prepared_comment['comment_date_gmt'] ) ) {
+			$prepared_comment['comment_date_gmt'] = current_time( 'mysql', true );
+		}
+
+		// Set author data if the user's logged in.
+		$missing_author = empty( $prepared_comment['user_id'] )
+			&& empty( $prepared_comment['comment_author'] )
+			&& empty( $prepared_comment['comment_author_email'] )
+			&& empty( $prepared_comment['comment_author_url'] );
+
+		if ( is_user_logged_in() && $missing_author ) {
+			$user = wp_get_current_user();
+
+			$prepared_comment['user_id']              = $user->ID;
+			$prepared_comment['comment_author']       = $user->display_name;
+			$prepared_comment['comment_author_email'] = $user->user_email;
+			$prepared_comment['comment_author_url']   = $user->user_url;
+		}
+
+		// Honor the discussion setting that requires a name and email address of the comment author.
+		if ( get_option( 'require_name_email' ) ) {
+			if ( empty( $prepared_comment['comment_author'] ) || empty( $prepared_comment['comment_author_email'] ) ) {
+				return new WP_Error(
+					'rest_comment_author_data_required',
+					__( 'Creating a comment requires valid author name and email values.' ),
+					array( 'status' => 400 )
+				);
+			}
+		}
+
+		if ( ! isset( $prepared_comment['comment_author_email'] ) ) {
+			$prepared_comment['comment_author_email'] = '';
+		}
+
+		if ( ! isset( $prepared_comment['comment_author_url'] ) ) {
+			$prepared_comment['comment_author_url'] = '';
+		}
+
+		if ( ! isset( $prepared_comment['comment_agent'] ) ) {
+			$prepared_comment['comment_agent'] = '';
+		}
+
+		$check_comment_lengths = wp_check_comment_data_max_lengths( $prepared_comment );
+
+		if ( is_wp_error( $check_comment_lengths ) ) {
+			$error_code = $check_comment_lengths->get_error_code();
+			return new WP_Error(
+				$error_code,
+				__( 'Comment field exceeds maximum length allowed.' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$prepared_comment['comment_approved'] = wp_allow_comment( $prepared_comment, true );
+
+		if ( is_wp_error( $prepared_comment['comment_approved'] ) ) {
+			$error_code    = $prepared_comment['comment_approved']->get_error_code();
+			$error_message = $prepared_comment['comment_approved']->get_error_message();
+
+			if ( 'comment_duplicate' === $error_code ) {
+				return new WP_Error(
+					$error_code,
+					$error_message,
+					array( 'status' => 409 )
+				);
+			}
+
+			if ( 'comment_flood' === $error_code ) {
+				return new WP_Error(
+					$error_code,
+					$error_message,
+					array( 'status' => 400 )
+				);
+			}
+
+			return $prepared_comment['comment_approved'];
+		}
+
+		/**
+		 * Filters a comment before it is inserted via the REST API.
+		 *
+		 * Allows modification of the comment right before it is inserted via wp_insert_comment().
+		 * Returning a WP_Error value from the filter will short-circuit insertion and allow
+		 * skipping further processing.
+		 *
+		 * @since 4.7.0
+		 * @since 4.8.0 `$prepared_comment` can now be a WP_Error to short-circuit insertion.
+		 *
+		 * @param array|WP_Error  $prepared_comment The prepared comment data for wp_insert_comment().
+		 * @param WP_REST_Request $request          Request used to insert the comment.
+		 */
+		$prepared_comment = apply_filters( 'rest_pre_insert_comment', $prepared_comment, $request );
+		if ( is_wp_error( $prepared_comment ) ) {
+			return $prepared_comment;
+		}
+
+		$comment_id = wp_insert_comment( wp_filter_comment( wp_slash( (array) $prepared_comment ) ) );
+
+		if ( ! $comment_id ) {
+			return new WP_Error(
+				'rest_comment_failed_create',
+				__( 'Creating comment failed.' ),
+				array( 'status' => 500 )
+			);
+		}
+
+		if ( isset( $request['status'] ) ) {
+			$this->handle_status_param( $request['status'], $comment_id );
+		}
+
+		$comment = get_comment( $comment_id );
+
+		/**
+		 * Fires after a comment is created or updated via the REST API.
+		 *
+		 * @since 4.7.0
+		 *
+		 * @param WP_Comment      $comment  Inserted or updated comment object.
+		 * @param WP_REST_Request $request  Request object.
+		 * @param bool            $creating True when creating a comment, false
+		 *                                  when updating.
+		 */
+		do_action( 'rest_insert_comment', $comment, $request, true );
+
+		$schema = $this->get_item_schema();
+
+		if ( ! empty( $schema['properties']['meta'] ) && isset( $request['meta'] ) ) {
+			$meta_update = $this->meta->update_value( $request['meta'], $comment_id );
+
+			if ( is_wp_error( $meta_update ) ) {
+				return $meta_update;
+			}
+		}
+
+		$fields_update = $this->update_additional_fields_for_object( $comment, $request );
+
+		if ( is_wp_error( $fields_update ) ) {
+			return $fields_update;
+		}
+
+		$context = current_user_can( 'moderate_comments' ) ? 'edit' : 'view';
+		$request->set_param( 'context', $context );
+
+		/**
+		 * Fires completely after a comment is created or updated via the REST API.
+		 *
+		 * @since 5.0.0
+		 *
+		 * @param WP_Comment      $comment  Inserted or updated comment object.
+		 * @param WP_REST_Request $request  Request object.
+		 * @param bool            $creating True when creating a comment, false
+		 *                                  when updating.
+		 */
+		do_action( 'rest_after_insert_comment', $comment, $request, true );
+
+		$response = $this->prepare_item_for_response( $comment, $request );
+		$response = rest_ensure_response( $response );
+
+		$response->set_status( 201 );
+		$response->header( 'Location', rest_url( sprintf( '%s/%s/%d', $this->namespace, $this->rest_base, $comment_id ) ) );
+
+		return $response;
+	}
+
+	/**
+	 * If empty comments are not allowed, checks if the provided comment content is not empty.
+	 *
+	 * @since 6.9.0
+	 *
+	 * @param array $prepared_comment The prepared comment data.
+	 * @return bool True if the content is allowed, false otherwise.
+	 */
+	protected function check_is_comment_content_allowed( $prepared_comment ) {
+		$check = wp_parse_args(
+			$prepared_comment,
+			array(
+				'comment_post_ID'      => 0,
+				'comment_author'       => null,
+				'comment_author_email' => null,
+				'comment_author_url'   => null,
+				'comment_parent'       => 0,
+				'user_id'              => 0,
+			)
+		);
+
+		/** This filter is documented in wp-includes/comment.php */
+		$allow_empty = apply_filters( 'allow_empty_comment', false, $check );
+
+		if ( $allow_empty ) {
+			return true;
+		}
+
+		/*
+		 * Do not allow a comment to be created with missing or empty
+		 * comment_content. See wp_handle_comment_submission().
+		 */
+		return '' !== $check['comment_content'];
+	}
+
 }
 
 add_action(
