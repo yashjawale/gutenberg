@@ -27,31 +27,6 @@ function gutenberg_block_comment_add_post_type_support() {
 add_action( 'init', 'gutenberg_block_comment_add_post_type_support' );
 
 /**
- * Updates the comment type in the REST API.
- *
- * This function is used as a filter callback for the 'rest_pre_insert_comment' hook.
- * It checks if the 'comment_type' parameter is set to 'block_comment' in the REST API request,
- * and if so, updates the 'comment_type' and 'comment_approved' properties of the prepared comment.
- *
- * @param array $prepared_comment The prepared comment data.
- * @param WP_REST_Request $request The REST API request object.
- * @return array The updated prepared comment data.
- */
-if ( ! function_exists( 'update_comment_type_in_rest_api_6_8' ) ) {
-	function update_comment_type_in_rest_api_6_8( $prepared_comment, $request ) {
-		if ( ! empty( $request['comment_type'] ) &&
-			( 'block_comment' === $request['comment_type'] || 'block_comment_ropen' === $request['comment_type'] || 'block_comment_resol' === $request['comment_type'] )
-		) {
-			$prepared_comment['comment_type']     = $request['comment_type'];
-			$prepared_comment['comment_approved'] = $request['comment_approved'];
-		}
-
-		return $prepared_comment;
-	}
-	add_filter( 'rest_pre_insert_comment', 'update_comment_type_in_rest_api_6_8', 10, 2 );
-}
-
-/**
  * Updates the comment type for avatars in the WordPress REST API.
  *
  * This function adds the 'block_comment' type to the list of comment types
@@ -117,25 +92,6 @@ function gutenberg_filter_comment_count_query_exclude_block_comments( $query ) {
 add_filter( 'query', 'gutenberg_filter_comment_count_query_exclude_block_comments' );
 
 /**
- * Enable empty comments when the comment_type is 'block_comment_ropen' or 'block_comment_resol'.
- *
- * @param bool  $allow            Whether to allow an empty comment.
- * @param array $prepared_comment The prepared comment data.
- * @return bool Modified allow empty comment value.
- */
-function gutenberg_allow_empty_block_comments( $allow, $prepared_comment ) {
-	if (
-		isset( $prepared_comment['comment_type'] ) &&
-		'block_comment_ropen' === $prepared_comment['comment_type'] ||
-		'block_comment_resol' === $prepared_comment['comment_type']
-	) {
-		$allow = true;
-	}
-	return $allow;
-}
-add_filter( 'allow_empty_comment', 'gutenberg_allow_empty_block_comments', 10, 2 );
-
-/**
  * Bypass REST API validation for resolution comments.
  *
  * The REST API validates both empty content and duplicates before WordPress core filters run,
@@ -183,26 +139,3 @@ function gutenberg_disable_duplicate_detection_for_resolution_comments( $duplica
 	return $duplicate_id;
 }
 add_filter( 'duplicate_comment_id', 'gutenberg_disable_duplicate_detection_for_resolution_comments', 10, 2 );
-
-/**
- * Automatically include all block comment types when querying for 'block_comment'.
- *
- * @param array            $clauses Array of comment query clauses.
- * @param WP_Comment_Query $query   The comment query object.
- * @return array Modified clauses.
- */
-function gutenberg_expand_block_comment_query( $clauses, $query ) {
-	$comment_type_from_vars = $query->query_vars['type'] ?? '';
-
-	if ( 'block_comment' === $comment_type_from_vars ) {
-		// Replace the IN clause to include all block comment types.
-		$clauses['where'] = str_replace(
-			"comment_type IN ('block_comment')",
-			"comment_type IN ('block_comment', 'block_comment_resol', 'block_comment_ropen')",
-			$clauses['where']
-		);
-	}
-
-	return $clauses;
-}
-add_filter( 'comments_clauses', 'gutenberg_expand_block_comment_query', 10, 2 );
