@@ -116,8 +116,9 @@ function Thread( {
 	setShowCommentBoard,
 	commentSidebarRef,
 } ) {
-	const { toggleBlockHighlight, selectBlock } =
-		useDispatch( blockEditorStore );
+	const { toggleBlockHighlight, selectBlock, toggleBlockSpotlight } = unlock(
+		useDispatch( blockEditorStore )
+	);
 	const relatedBlockElement = useBlockElement( thread.blockClientId );
 	const debouncedToggleBlockHighlight = useDebounce(
 		toggleBlockHighlight,
@@ -137,11 +138,13 @@ function Thread( {
 		setSelectedThread( thread.id );
 		// pass `null` as the second parameter to prevent focusing the block.
 		selectBlock( thread.blockClientId, null );
+		toggleBlockSpotlight( thread.blockClientId, true );
 	};
 
 	const unselectThread = () => {
 		setSelectedThread( null );
 		setShowCommentBoard( false );
+		toggleBlockSpotlight( thread.blockClientId, false );
 	};
 
 	const allReplies = thread?.reply || [];
@@ -210,6 +213,7 @@ function Thread( {
 			) }
 			<CommentBoard
 				thread={ thread }
+				isExpanded={ isSelected }
 				onEdit={ ( params = {} ) => {
 					const { status } = params;
 					onEditComment( params );
@@ -222,7 +226,6 @@ function Thread( {
 					}
 				} }
 				onDelete={ onCommentDelete }
-				status={ thread.status }
 			/>
 			{ isSelected &&
 				allReplies.map( ( reply ) => (
@@ -234,19 +237,10 @@ function Thread( {
 					>
 						<CommentBoard
 							thread={ reply }
-							onEdit={
-								'approved' !== thread.status &&
-								( reply.type === 'block_comment' ||
-									reply.type === 'block_comment_ropen' )
-									? onEditComment
-									: undefined
-							}
-							onDelete={
-								'approved' !== thread.status &&
-								reply.type === 'block_comment'
-									? onCommentDelete
-									: undefined
-							}
+							parent={ thread }
+							isExpanded={ isSelected }
+							onEdit={ onEditComment }
+							onDelete={ onCommentDelete }
 						/>
 					</VStack>
 				) ) }
@@ -279,19 +273,10 @@ function Thread( {
 			{ ! isSelected && lastReply && (
 				<CommentBoard
 					thread={ lastReply }
-					onEdit={
-						'approved' !== thread.status &&
-						( lastReply.type === 'block_comment' ||
-							lastReply.type === 'block_comment_ropen' )
-							? onEditComment
-							: undefined
-					}
-					onDelete={
-						'approved' !== thread.status &&
-						lastReply.type === 'block_comment'
-							? onCommentDelete
-							: undefined
-					}
+					parent={ thread }
+					isExpanded={ isSelected }
+					onEdit={ onEditComment }
+					onDelete={ onCommentDelete }
 				/>
 			) }
 			{ isSelected && (
@@ -348,7 +333,7 @@ function Thread( {
 	);
 }
 
-const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
+const CommentBoard = ( { thread, parent, isExpanded, onEdit, onDelete } ) => {
 	const [ actionState, setActionState ] = useState( false );
 	const [ showConfirmDialog, setShowConfirmDialog ] = useState( false );
 
@@ -375,37 +360,38 @@ const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
 		thread.content.raw.trim() !== '';
 
 	const actions = [
-		onEdit &&
-			status !== 'approved' &&
-			( ! isResolutionComment || isEditableReopenComment ) && {
-				id: 'edit',
-				title: _x( 'Edit', 'Edit comment' ),
-				onClick: () => {
-					setActionState( 'edit' );
-				},
+		{
+			id: 'edit',
+			title: _x( 'Edit', 'Edit comment' ),
+			isEligible: ( { status } ) => status !== 'approved',
+			onClick: () => {
+				setActionState( 'edit' );
 			},
-		onDelete &&
-			! isResolutionComment && {
-				id: 'delete',
-				title: _x( 'Delete', 'Delete comment' ),
-				onClick: () => {
-					setActionState( 'delete' );
-					setShowConfirmDialog( true );
-				},
+		},
+		{
+			id: 'reopen',
+			title: _x( 'Reopen', 'Reopen comment' ),
+			isEligible: ( { status } ) => status === 'approved',
+			onClick: () => {
+				onEdit( { id: thread.id, status: 'hold' } );
 			},
-		onEdit &&
-			status === 'approved' &&
-			! isResolutionComment && {
-				id: 'reopen',
-				title: _x( 'Reopen', 'Reopen comment' ),
-				onClick: () => {
-					onEdit( { id: thread.id, status: 'hold' } );
-				},
+		},
+		{
+			id: 'delete',
+			title: _x( 'Delete', 'Delete comment' ),
+			isEligible: () => true,
+			onClick: () => {
+				setActionState( 'delete' );
+				setShowConfirmDialog( true );
 			},
+		},
 	];
 
-	const canResolve = thread?.parent === 0 && ! isResolutionComment;
-	const moreActions = actions.filter( ( item ) => item?.onClick );
+	const canResolve = thread.parent === 0;
+	const moreActions =
+		parent?.status !== 'approved'
+			? actions.filter( ( item ) => item.isEligible( thread ) )
+			: [];
 
 	return (
 		<>
@@ -416,33 +402,35 @@ const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
 					date={ thread?.date }
 					userId={ thread?.author }
 				/>
-				<FlexItem
-					className="editor-collab-sidebar-panel__comment-status"
-					onClick={ ( event ) => {
-						// Prevent the thread from being selected.
-						event.stopPropagation();
-					} }
-				>
-					<HStack spacing="0">
-						{ canResolve && (
-							<Button
-								label={ _x(
-									'Resolve',
-									'Mark comment as resolved'
-								) }
-								size="small"
-								icon={ published }
-								disabled={ status === 'approved' }
-								accessibleWhenDisabled={ status === 'approved' }
-								onClick={ () => {
-									onEdit( {
-										id: thread.id,
-										status: 'approved',
-									} );
-								} }
-							/>
-						) }
-						{ moreActions.length > 0 && (
+				{ isExpanded && (
+					<FlexItem
+						className="editor-collab-sidebar-panel__comment-status"
+						onClick={ ( event ) => {
+							// Prevent the thread from being selected.
+							event.stopPropagation();
+						} }
+					>
+						<HStack spacing="0">
+							{ canResolve && (
+								<Button
+									label={ _x(
+										'Resolve',
+										'Mark comment as resolved'
+									) }
+									size="small"
+									icon={ published }
+									disabled={ thread.status === 'approved' }
+									accessibleWhenDisabled={
+										thread.status === 'approved'
+									}
+									onClick={ () => {
+										onEdit( {
+											id: thread.id,
+											status: 'approved',
+										} );
+									} }
+								/>
+							) }
 							<Menu placement="bottom-end">
 								<Menu.TriggerButton
 									render={
@@ -450,6 +438,8 @@ const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
 											size="small"
 											icon={ moreVertical }
 											label={ __( 'Actions' ) }
+											disabled={ ! moreActions.length }
+											accessibleWhenDisabled
 										/>
 									}
 								/>
@@ -466,9 +456,9 @@ const CommentBoard = ( { thread, onEdit, onDelete, status } ) => {
 									) ) }
 								</Menu.Popover>
 							</Menu>
-						) }
-					</HStack>
-				</FlexItem>
+						</HStack>
+					</FlexItem>
+				) }
 			</HStack>
 			{ 'edit' === actionState ? (
 				<CommentForm
