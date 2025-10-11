@@ -27,6 +27,25 @@ function gutenberg_block_comment_add_post_type_support() {
 add_action( 'init', 'gutenberg_block_comment_add_post_type_support' );
 
 /**
+ * Register comment metadata for block comment status.
+ */
+function gutenberg_register_block_comment_metadata() {
+	register_meta( 'comment', '_wp_block_comment_status', array(
+		'type'              => 'string',
+		'description'       => __( 'Block comment resolution status', 'gutenberg' ),
+		'single'            => true,
+		'show_in_rest'      => true,
+		'auth_callback'     => function() {
+			return current_user_can( 'edit_posts' );
+		},
+		'sanitize_callback' => function( $value ) {
+			return in_array( $value, array( 'resolved', 'reopen' ), true ) ? $value : '';
+		},
+	) );
+}
+add_action( 'init', 'gutenberg_register_block_comment_metadata' );
+
+/**
  * Updates the comment type in the REST API.
  *
  * This function is used as a filter callback for the 'rest_pre_insert_comment' hook.
@@ -42,6 +61,12 @@ if ( ! function_exists( 'update_comment_type_in_rest_api_6_8' ) ) {
 		if ( ! empty( $request['comment_type'] ) && 'block_comment' === $request['comment_type'] ) {
 			$prepared_comment['comment_type']     = $request['comment_type'];
 			$prepared_comment['comment_approved'] = $request['comment_approved'];
+		}
+
+		// Handle metadata for resolution status.
+		if ( ! empty( $request['meta'] ) && isset( $request['meta']['_wp_block_comment_status'] ) ) {
+			$prepared_comment['comment_meta']['_wp_block_comment_status'] = $request['meta']['_wp_block_comment_status'];
+			$prepared_comment['meta']['_wp_block_comment_status'] = $request['meta']['_wp_block_comment_status'];
 		}
 
 		return $prepared_comment;
@@ -114,25 +139,6 @@ function gutenberg_filter_comment_count_query_exclude_block_comments( $query ) {
 }
 add_filter( 'query', 'gutenberg_filter_comment_count_query_exclude_block_comments' );
 
-/**
- * Allow empty comments for block comments with resolution status metadata.
- *
- * @param bool $allow_empty Whether to allow empty comments.
- * @param array $commentdata Comment data array.
- * @return bool Modified allow empty result.
- */
-function gutenberg_allow_empty_block_comments_with_status( $allow_empty, $commentdata ) {
-	// Allow empty comments if it's a block_comment with status metadata
-	if ( isset( $commentdata['comment_type'] ) && 'block_comment' === $commentdata['comment_type'] ) {
-		// Check if this comment has resolution status metadata
-		if ( isset( $commentdata['comment_meta'] ) && isset( $commentdata['comment_meta']['_wp_block_comment_status'] ) ) {
-			$status = $commentdata['comment_meta']['_wp_block_comment_status'];
-			if ( in_array( $status, array( 'resolved', 'reopen' ), true ) ) {
-				return true;
-			}
-		}
-	}
-
-	return $allow_empty;
-}
-add_filter( 'allow_empty_comment', 'gutenberg_allow_empty_block_comments_with_status', 10, 2 );
+// TEMPORARY -- working on removing this in favor of a more specific filter.
+add_filter( 'allow_empty_comment', '__return_true', 50 );
+add_filter( 'duplicate_comment_id', '__return_false', 50 );

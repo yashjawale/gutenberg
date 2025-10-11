@@ -9,6 +9,67 @@
 // Create a new class that extends WP_REST_Comments_Controller
 class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 
+	/**
+	 * Valid block comment statuses for metadata.
+	 */
+	const VALID_BLOCK_COMMENT_STATUSES = array( 'resolved', 'reopen' );
+
+	/**
+	 * Creates a comment.
+	 *
+	 * @since 6.9.0
+	 *
+	 * @param WP_REST_Request $request Full details about the request.
+	 * @return WP_REST_Response|WP_Error Response object on success, or WP_Error object on failure.
+	 */
+	public function create_item( $request ) {
+		// Validate block comment metadata if present
+		if ( ! empty( $request['meta'] ) && isset( $request['meta']['_wp_block_comment_status'] ) ) {
+			$status = $request['meta']['_wp_block_comment_status'];
+			if ( ! in_array( $status, self::VALID_BLOCK_COMMENT_STATUSES, true ) ) {
+				return new WP_Error(
+					'rest_invalid_block_comment_status',
+					sprintf( 
+						/* translators: %s: List of valid statuses */
+						__( 'Invalid block comment status. Must be one of: %s', 'gutenberg' ), 
+						implode( ', ', self::VALID_BLOCK_COMMENT_STATUSES ) 
+					),
+					array( 'status' => 400 )
+				);
+			}
+		}
+
+		return parent::create_item( $request );
+	}
+
+	/**
+	 * Updates a comment.
+	 *
+	 * @since 6.9.0
+	 *
+	 * @param WP_REST_Request $request Full details about the request.
+	 * @return WP_REST_Response|WP_Error Response object on success, or WP_Error object on failure.
+	 */
+	public function update_item( $request ) {
+		// Validate block comment metadata if present
+		if ( ! empty( $request['meta'] ) && isset( $request['meta']['_wp_block_comment_status'] ) ) {
+			$status = $request['meta']['_wp_block_comment_status'];
+			if ( ! in_array( $status, self::VALID_BLOCK_COMMENT_STATUSES, true ) ) {
+				return new WP_Error(
+					'rest_invalid_block_comment_status',
+					sprintf( 
+						/* translators: %s: List of valid statuses */
+						__( 'Invalid block comment status. Must be one of: %s', 'gutenberg' ), 
+						implode( ', ', self::VALID_BLOCK_COMMENT_STATUSES ) 
+					),
+					array( 'status' => 400 )
+				);
+			}
+		}
+
+		return parent::update_item( $request );
+	}
+
 	public function get_items_permissions_check( $request ) {
 		$is_block_comment = ! empty( $request['type'] ) && 'block_comment' === $request['type'];
 		$is_edit_context  = ! empty( $request['context'] ) && 'edit' === $request['context'];
@@ -284,7 +345,7 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 	}
 
 	/**
-	 * Override the schema to change `type` property.
+	 * Override the schema to change `type` property and add metadata support.
 	 *
 	 * @return array
 	 */
@@ -298,6 +359,23 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 			'arg_options' => array(
 				'sanitize_callback' => 'sanitize_key',
 			),
+		);
+
+		// Add metadata schema for block comment status.
+		if ( ! isset( $schema['properties']['meta'] ) ) {
+			$schema['properties']['meta'] = array(
+				'description' => __( 'Meta fields.', 'gutenberg' ),
+				'type'        => 'object',
+				'context'     => array( 'view', 'edit' ),
+				'properties'  => array(),
+			);
+		}
+
+		$schema['properties']['meta']['properties']['_wp_block_comment_status'] = array(
+			'description' => __( 'Block comment status.', 'gutenberg' ),
+			'type'        => 'string',
+			'enum'        => self::VALID_BLOCK_COMMENT_STATUSES,
+			'context'     => array( 'view', 'edit' ),
 		);
 
 		return $schema;
