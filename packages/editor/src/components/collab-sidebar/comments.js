@@ -348,16 +348,12 @@ const CommentBoard = ( { thread, parent, isExpanded, onEdit, onDelete } ) => {
 		setShowConfirmDialog( false );
 	};
 
-	// Check if this is a resolution comment.
+	// Check if this is a resolution comment by checking metadata.
 	const isResolutionComment =
-		thread.type === 'block_comment_resol' ||
-		thread.type === 'block_comment_ropen';
-
-	// Check if this is a reopen comment with content that should be editable.
-	const isEditableReopenComment =
-		thread.type === 'block_comment_ropen' &&
-		thread?.content?.raw &&
-		thread.content.raw.trim() !== '';
+		thread.type === 'block_comment' &&
+		thread.meta &&
+		( thread.meta._wp_block_comment_status === 'resolved' ||
+			thread.meta._wp_block_comment_status === 'reopen' );
 
 	const actions = [
 		{
@@ -492,7 +488,8 @@ const CommentBoard = ( { thread, parent, isExpanded, onEdit, onDelete } ) => {
 					{ isResolutionComment
 						? ( () => {
 								const actionText =
-									thread.type === 'block_comment_resol'
+									thread.meta._wp_block_comment_status ===
+									'resolved'
 										? __( 'Marked as resolved' )
 										: __( 'Reopened' );
 								const content = thread?.content?.raw;

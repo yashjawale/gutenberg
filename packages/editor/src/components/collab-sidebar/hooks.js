@@ -194,16 +194,26 @@ export function useBlockCommentsActions() {
 		};
 
 		try {
-			await saveEntityRecord(
-				'root',
-				'comment',
-				{
-					id,
-					content,
-					status,
-				},
-				{ throwOnError: true }
-			);
+			const updateData = {
+				id,
+				content,
+				status,
+			};
+
+			// Add metadata for resolution/reopen actions.
+			if ( status === 'approved' ) {
+				updateData.meta = {
+					_wp_block_comment_status: 'resolved',
+				};
+			} else if ( status === 'hold' && content ) {
+				updateData.meta = {
+					_wp_block_comment_status: 'reopen',
+				};
+			}
+
+			await saveEntityRecord( 'root', 'comment', updateData, {
+				throwOnError: true,
+			} );
 			createNotice(
 				'snackbar',
 				messages[ messageType ] ?? __( 'Comment updated.' ),
