@@ -30,18 +30,22 @@ add_action( 'init', 'gutenberg_block_comment_add_post_type_support' );
  * Register comment metadata for block comment status.
  */
 function gutenberg_register_block_comment_metadata() {
-	register_meta( 'comment', '_wp_block_comment_status', array(
-		'type'              => 'string',
-		'description'       => __( 'Block comment resolution status', 'gutenberg' ),
-		'single'            => true,
-		'show_in_rest'      => true,
-		'auth_callback'     => function() {
-			return current_user_can( 'edit_posts' );
-		},
-		'sanitize_callback' => function( $value ) {
-			return in_array( $value, array( 'resolved', 'reopen' ), true ) ? $value : '';
-		},
-	) );
+	register_meta(
+		'comment',
+		'_wp_block_comment_status',
+		array(
+			'type'              => 'string',
+			'description'       => __( 'Block comment resolution status', 'gutenberg' ),
+			'single'            => true,
+			'show_in_rest'      => true,
+			'auth_callback'     => function () {
+				return current_user_can( 'edit_posts' );
+			},
+			'sanitize_callback' => function ( $value ) {
+				return in_array( $value, array( 'resolved', 'reopen' ), true ) ? $value : '';
+			},
+		)
+	);
 }
 add_action( 'init', 'gutenberg_register_block_comment_metadata' );
 
@@ -66,7 +70,7 @@ if ( ! function_exists( 'update_comment_type_in_rest_api_6_8' ) ) {
 		// Handle metadata for resolution status.
 		if ( ! empty( $request['meta'] ) && isset( $request['meta']['_wp_block_comment_status'] ) ) {
 			$prepared_comment['comment_meta']['_wp_block_comment_status'] = $request['meta']['_wp_block_comment_status'];
-			$prepared_comment['meta']['_wp_block_comment_status'] = $request['meta']['_wp_block_comment_status'];
+			$prepared_comment['meta']['_wp_block_comment_status']         = $request['meta']['_wp_block_comment_status'];
 		}
 
 		return $prepared_comment;

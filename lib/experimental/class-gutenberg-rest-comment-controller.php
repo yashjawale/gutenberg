@@ -29,10 +29,10 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 			if ( ! in_array( $status, self::VALID_BLOCK_COMMENT_STATUSES, true ) ) {
 				return new WP_Error(
 					'rest_invalid_block_comment_status',
-					sprintf( 
+					sprintf(
 						/* translators: %s: List of valid statuses */
-						__( 'Invalid block comment status. Must be one of: %s', 'gutenberg' ), 
-						implode( ', ', self::VALID_BLOCK_COMMENT_STATUSES ) 
+						__( 'Invalid block comment status. Must be one of: %s', 'gutenberg' ),
+						implode( ', ', self::VALID_BLOCK_COMMENT_STATUSES )
 					),
 					array( 'status' => 400 )
 				);
@@ -57,10 +57,10 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 			if ( ! in_array( $status, self::VALID_BLOCK_COMMENT_STATUSES, true ) ) {
 				return new WP_Error(
 					'rest_invalid_block_comment_status',
-					sprintf( 
+					sprintf(
 						/* translators: %s: List of valid statuses */
-						__( 'Invalid block comment status. Must be one of: %s', 'gutenberg' ), 
-						implode( ', ', self::VALID_BLOCK_COMMENT_STATUSES ) 
+						__( 'Invalid block comment status. Must be one of: %s', 'gutenberg' ),
+						implode( ', ', self::VALID_BLOCK_COMMENT_STATUSES )
 					),
 					array( 'status' => 400 )
 				);
