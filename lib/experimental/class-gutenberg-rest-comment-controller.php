@@ -304,7 +304,7 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 		}
 
 		// Include block comment metadata into check_is_comment_content_allowed [backport].
-		if ( ! empty( $request['meta'] ) && isset( $request['meta']['_wp_block_comment_status'] ) ) {
+		if ( isset( $request['meta']['_wp_block_comment_status'] ) ) {
 			$prepared_comment['meta']['_wp_block_comment_status'] = $request['meta']['_wp_block_comment_status'];
 		}
 
