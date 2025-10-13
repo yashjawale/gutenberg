@@ -9,11 +9,6 @@
 // Create a new class that extends WP_REST_Comments_Controller
 class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 
-	/**
-	 * Valid block comment statuses for metadata.
-	 */
-	const VALID_BLOCK_COMMENT_STATUSES = array( 'resolved', 'reopen' );
-
 	public function get_items_permissions_check( $request ) {
 		$is_block_comment = ! empty( $request['type'] ) && 'block_comment' === $request['type'];
 		$is_edit_context  = ! empty( $request['context'] ) && 'edit' === $request['context'];
@@ -562,7 +557,7 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 		}
 
 		// Allow empty block comments with resolution metadata [backport].
-		if ( isset( $check['meta']['_wp_block_comment_status'] ) && in_array( $check['meta']['_wp_block_comment_status'], self::VALID_BLOCK_COMMENT_STATUSES, true ) ) {
+		if ( isset( $check['meta']['_wp_block_comment_status'] ) ) {
 			return true;
 		}
 
