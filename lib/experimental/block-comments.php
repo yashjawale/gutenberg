@@ -143,5 +143,20 @@ function gutenberg_filter_comment_count_query_exclude_block_comments( $query ) {
 }
 add_filter( 'query', 'gutenberg_filter_comment_count_query_exclude_block_comments' );
 
-// TEMPORARY -- working on removing this in favor of a more specific filter.
-add_filter( 'duplicate_comment_id', '__return_false', 50 );
+/**
+ * Allows duplicate block comment resolution messages.
+ *
+ * @since 6.9.0
+ *
+ * @param int $dupe_id The duplicate comment ID.
+ * @param array $commentdata The comment data.
+ *
+ * @return bool True if the comment can be duplicated, false otherwise.
+ */
+function gutenberg_allow_duplicate_block_comment_resolution( $dupe_id, $commentdata ) {
+	if ( isset( $commentdata['meta']['_wp_block_comment_status'] ) && in_array( $commentdata['meta']['_wp_block_comment_status'], array('resolved', 'reopen'), true ) ) {
+		return false;
+	}
+}
+
+add_filter( 'duplicate_comment_id', 'gutenberg_allow_duplicate_block_comment_resolution', 10, 2 );
