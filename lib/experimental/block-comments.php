@@ -154,7 +154,7 @@ add_filter( 'query', 'gutenberg_filter_comment_count_query_exclude_block_comment
  * @return bool True if the comment can be duplicated, false otherwise.
  */
 function gutenberg_allow_duplicate_block_comment_resolution( $dupe_id, $commentdata ) {
-	if ( isset( $commentdata['meta']['_wp_block_comment_status'] ) && in_array( $commentdata['meta']['_wp_block_comment_status'], array('resolved', 'reopen'), true ) ) {
+	if ( isset( $commentdata['meta']['_wp_block_comment_status'] ) && in_array( $commentdata['meta']['_wp_block_comment_status'], array( 'resolved', 'reopen' ), true ) ) {
 		return false;
 	}
 }
