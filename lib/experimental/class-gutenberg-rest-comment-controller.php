@@ -400,6 +400,18 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 			return $prepared_comment['comment_approved'];
 		}
 
+		// [backport].
+		if ( ! empty( $request['comment_type'] ) && 'block_comment' === $request['comment_type'] ) {
+			$prepared_comment['comment_type']     = $request['comment_type'];
+			$prepared_comment['comment_approved'] = $request['comment_approved'];
+		}
+
+		// Handle metadata for resolution status [backport].
+		if ( ! empty( $request['meta'] ) && isset( $request['meta']['_wp_block_comment_status'] ) ) {
+			$prepared_comment['comment_meta']['_wp_block_comment_status'] = $request['meta']['_wp_block_comment_status'];
+			$prepared_comment['meta']['_wp_block_comment_status']         = $request['meta']['_wp_block_comment_status'];
+		}
+
 		/**
 		 * Filters a comment before it is inserted via the REST API.
 		 *
