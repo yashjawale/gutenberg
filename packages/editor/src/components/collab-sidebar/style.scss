@@ -21,6 +21,7 @@
 	border-radius: $radius-large;
 	border: $border-width solid $gray-300;
 	background-color: $gray-100;
+	overflow: hidden;
 
 	&.is-selected {
 		background-color: $white;
@@ -137,6 +138,32 @@
 	padding: 9px 11px;
 	line-height: 20px !important;
 	display: block;
+}
+
+// Visually hidden until focused (skip link pattern)
+.editor-collab-sidebar-panel__skip-to-comment,
+.editor-collab-sidebar-panel__skip-to-block {
+	position: absolute;
+	top: -9999px;
+	right: -9999px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	background: $white !important;
+	z-index: -1;
+
+	&:focus {
+		overflow: visible;
+		clip-path: none;
+		z-index: 1;
+		right: $grid-unit-10;
+	}
+}
+.editor-collab-sidebar-panel__skip-to-comment:focus {
+	top: $grid-unit-10;
+}
+.editor-collab-sidebar-panel__skip-to-block:focus {
+	top: auto;
+	bottom: $grid-unit-10;
 }
 
 // Comment avatar indicators.
