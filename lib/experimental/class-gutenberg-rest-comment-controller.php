@@ -557,11 +557,7 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 		}
 
 		// Allow empty block comments with resolution metadata [backport].
-		if (
-			isset( $check['comment_type'] ) &&
-			'block_comment' === $check['comment_type'] &&
-			isset( $check['meta']['_wp_block_comment_status'] )
-		) {
+		if ( isset( $check['meta']['_wp_block_comment_status'] ) ) {
 			return true;
 		}
 
