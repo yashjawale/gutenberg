@@ -144,5 +144,4 @@ function gutenberg_filter_comment_count_query_exclude_block_comments( $query ) {
 add_filter( 'query', 'gutenberg_filter_comment_count_query_exclude_block_comments' );
 
 // TEMPORARY -- working on removing this in favor of a more specific filter.
-add_filter( 'allow_empty_comment', '__return_true', 50 );
 add_filter( 'duplicate_comment_id', '__return_false', 50 );
