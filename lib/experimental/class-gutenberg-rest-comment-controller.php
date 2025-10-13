@@ -297,22 +297,6 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 
 		// Note: Removes non-default comment type check for the backport.
 
-		// Validate block comment metadata if present [backport].
-		if ( ! empty( $request['meta'] ) && isset( $request['meta']['_wp_block_comment_status'] ) ) {
-			$status = $request['meta']['_wp_block_comment_status'];
-			if ( ! in_array( $status, self::VALID_BLOCK_COMMENT_STATUSES, true ) ) {
-				return new WP_Error(
-					'rest_invalid_block_comment_status',
-					sprintf(
-						/* translators: %s: List of valid statuses */
-						__( 'Invalid block comment status. Must be one of: %s', 'gutenberg' ),
-						implode( ', ', self::VALID_BLOCK_COMMENT_STATUSES )
-					),
-					array( 'status' => 400 )
-				);
-			}
-		}
-
 		$prepared_comment = $this->prepare_item_for_database( $request );
 		if ( is_wp_error( $prepared_comment ) ) {
 			return $prepared_comment;
@@ -524,22 +508,6 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 				__( 'Sorry, you are not allowed to change the comment type.' ),
 				array( 'status' => 404 )
 			);
-		}
-
-		// Validate block comment metadata if present [backport].
-		if ( ! empty( $request['meta'] ) && isset( $request['meta']['_wp_block_comment_status'] ) ) {
-			$status = $request['meta']['_wp_block_comment_status'];
-			if ( ! in_array( $status, self::VALID_BLOCK_COMMENT_STATUSES, true ) ) {
-				return new WP_Error(
-					'rest_invalid_block_comment_status',
-					sprintf(
-						/* translators: %s: List of valid statuses */
-						__( 'Invalid block comment status. Must be one of: %s', 'gutenberg' ),
-						implode( ', ', self::VALID_BLOCK_COMMENT_STATUSES )
-					),
-					array( 'status' => 400 )
-				);
-			}
 		}
 
 		$prepared_args = $this->prepare_item_for_database( $request );
