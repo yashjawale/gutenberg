@@ -510,7 +510,7 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 	}
 
 	/**
-	 * Override the schema to change `type` property and add metadata support.
+	 * Override the schema to change `type` property.
 	 *
 	 * @return array
 	 */
