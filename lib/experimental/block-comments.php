@@ -34,15 +34,17 @@ function gutenberg_register_block_comment_metadata() {
 		'comment',
 		'_wp_block_comment_status',
 		array(
-			'type'              => 'string',
-			'description'       => __( 'Block comment resolution status', 'gutenberg' ),
-			'single'            => true,
-			'show_in_rest'      => true,
-			'auth_callback'     => function () {
+			'type'          => 'string',
+			'description'   => __( 'Block comment resolution status', 'gutenberg' ),
+			'single'        => true,
+			'show_in_rest'  => array(
+				'schema' => array(
+					'type' => 'string',
+					'enum' => array( 'resolved', 'reopen' ),
+				),
+			),
+			'auth_callback' => function () {
 				return current_user_can( 'edit_posts' );
-			},
-			'sanitize_callback' => function ( $value ) {
-				return in_array( $value, array( 'resolved', 'reopen' ), true ) ? $value : '';
 			},
 		)
 	);
