@@ -550,7 +550,7 @@ const CommentBoard = ( { thread, parent, isExpanded, onEdit, onDelete } ) => {
 									content.trim() !== ''
 								) {
 									return sprintf(
-										// translators: %1$s: action, %2$s: content.
+										// translators: %1$s: action label ("Marked as resolved" or "Reopened"); %2$s: comment text.
 										__( '%1$s: %2$s' ),
 										actionText,
 										content
