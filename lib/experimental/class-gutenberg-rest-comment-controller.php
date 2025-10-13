@@ -536,23 +536,6 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 			'context'     => array( 'view', 'edit', 'embed' ),
 		);
 
-		// Add metadata schema for block comment status.
-		if ( ! isset( $schema['properties']['meta'] ) ) {
-			$schema['properties']['meta'] = array(
-				'description' => __( 'Meta fields.', 'gutenberg' ),
-				'type'        => 'object',
-				'context'     => array( 'view', 'edit' ),
-				'properties'  => array(),
-			);
-		}
-
-		$schema['properties']['meta']['properties']['_wp_block_comment_status'] = array(
-			'description' => __( 'Block comment status.', 'gutenberg' ),
-			'type'        => 'string',
-			'enum'        => self::VALID_BLOCK_COMMENT_STATUSES,
-			'context'     => array( 'view', 'edit' ),
-		);
-
 		return $schema;
 	}
 
