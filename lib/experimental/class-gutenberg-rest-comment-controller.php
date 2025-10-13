@@ -14,34 +14,6 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 	 */
 	const VALID_BLOCK_COMMENT_STATUSES = array( 'resolved', 'reopen' );
 
-	/**
-	 * Updates a comment.
-	 *
-	 * @since 6.9.0
-	 *
-	 * @param WP_REST_Request $request Full details about the request.
-	 * @return WP_REST_Response|WP_Error Response object on success, or WP_Error object on failure.
-	 */
-	public function update_item( $request ) {
-		// Validate block comment metadata if present.
-		if ( ! empty( $request['meta'] ) && isset( $request['meta']['_wp_block_comment_status'] ) ) {
-			$status = $request['meta']['_wp_block_comment_status'];
-			if ( ! in_array( $status, self::VALID_BLOCK_COMMENT_STATUSES, true ) ) {
-				return new WP_Error(
-					'rest_invalid_block_comment_status',
-					sprintf(
-						/* translators: %s: List of valid statuses */
-						__( 'Invalid block comment status. Must be one of: %s', 'gutenberg' ),
-						implode( ', ', self::VALID_BLOCK_COMMENT_STATUSES )
-					),
-					array( 'status' => 400 )
-				);
-			}
-		}
-
-		return parent::update_item( $request );
-	}
-
 	public function get_items_permissions_check( $request ) {
 		$is_block_comment = ! empty( $request['type'] ) && 'block_comment' === $request['type'];
 		$is_edit_context  = ! empty( $request['context'] ) && 'edit' === $request['context'];
@@ -523,6 +495,147 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 		$response->header( 'Location', rest_url( sprintf( '%s/%s/%d', $this->namespace, $this->rest_base, $comment_id ) ) );
 
 		return $response;
+	}
+
+	/**
+	 * Updates a block comment.
+	 *
+	 * @since 6.9.0
+	 *
+	 * @param WP_REST_Request $request Full details about the request.
+	 * @return WP_REST_Response|WP_Error Response object on success, or error object on failure.
+	 */
+	public function update_item( $request ) {
+		$comment = $this->get_comment( $request['id'] );
+		if ( is_wp_error( $comment ) ) {
+			return $comment;
+		}
+
+		$id = $comment->comment_ID;
+
+		if ( isset( $request['type'] ) && get_comment_type( $id ) !== $request['type'] ) {
+			return new WP_Error(
+				'rest_comment_invalid_type',
+				__( 'Sorry, you are not allowed to change the comment type.' ),
+				array( 'status' => 404 )
+			);
+		}
+
+		// Validate block comment metadata if present [backport].
+		if ( ! empty( $request['meta'] ) && isset( $request['meta']['_wp_block_comment_status'] ) ) {
+			$status = $request['meta']['_wp_block_comment_status'];
+			if ( ! in_array( $status, self::VALID_BLOCK_COMMENT_STATUSES, true ) ) {
+				return new WP_Error(
+					'rest_invalid_block_comment_status',
+					sprintf(
+						/* translators: %s: List of valid statuses */
+						__( 'Invalid block comment status. Must be one of: %s', 'gutenberg' ),
+						implode( ', ', self::VALID_BLOCK_COMMENT_STATUSES )
+					),
+					array( 'status' => 400 )
+				);
+			}
+		}
+
+		$prepared_args = $this->prepare_item_for_database( $request );
+
+		if ( is_wp_error( $prepared_args ) ) {
+			return $prepared_args;
+		}
+
+		if ( ! empty( $prepared_args['comment_post_ID'] ) ) {
+			$post = get_post( $prepared_args['comment_post_ID'] );
+
+			if ( empty( $post ) ) {
+				return new WP_Error(
+					'rest_comment_invalid_post_id',
+					__( 'Invalid post ID.' ),
+					array( 'status' => 403 )
+				);
+			}
+		}
+
+		if ( empty( $prepared_args ) && isset( $request['status'] ) ) {
+			// Only the comment status is being changed.
+			$change = $this->handle_status_param( $request['status'], $id );
+
+			if ( ! $change ) {
+				return new WP_Error(
+					'rest_comment_failed_edit',
+					__( 'Updating comment status failed.' ),
+					array( 'status' => 500 )
+				);
+			}
+		} elseif ( ! empty( $prepared_args ) ) {
+			if ( is_wp_error( $prepared_args ) ) {
+				return $prepared_args;
+			}
+
+			if ( isset( $prepared_args['comment_content'] ) && empty( $prepared_args['comment_content'] ) ) {
+				return new WP_Error(
+					'rest_comment_content_invalid',
+					__( 'Invalid comment content.' ),
+					array( 'status' => 400 )
+				);
+			}
+
+			$prepared_args['comment_ID'] = $id;
+
+			$check_comment_lengths = wp_check_comment_data_max_lengths( $prepared_args );
+
+			if ( is_wp_error( $check_comment_lengths ) ) {
+				$error_code = $check_comment_lengths->get_error_code();
+				return new WP_Error(
+					$error_code,
+					__( 'Comment field exceeds maximum length allowed.' ),
+					array( 'status' => 400 )
+				);
+			}
+
+			$updated = wp_update_comment( wp_slash( (array) $prepared_args ), true );
+
+			if ( is_wp_error( $updated ) ) {
+				return new WP_Error(
+					'rest_comment_failed_edit',
+					__( 'Updating comment failed.' ),
+					array( 'status' => 500 )
+				);
+			}
+
+			if ( isset( $request['status'] ) ) {
+				$this->handle_status_param( $request['status'], $id );
+			}
+		}
+
+		$comment = get_comment( $id );
+
+		/** This action is documented in wp-includes/rest-api/endpoints/class-wp-rest-comments-controller.php */
+		do_action( 'rest_insert_comment', $comment, $request, false );
+
+		$schema = $this->get_item_schema();
+
+		if ( ! empty( $schema['properties']['meta'] ) && isset( $request['meta'] ) ) {
+			$meta_update = $this->meta->update_value( $request['meta'], $id );
+
+			if ( is_wp_error( $meta_update ) ) {
+				return $meta_update;
+			}
+		}
+
+		$fields_update = $this->update_additional_fields_for_object( $comment, $request );
+
+		if ( is_wp_error( $fields_update ) ) {
+			return $fields_update;
+		}
+
+		$request->set_param( 'context', 'edit' );
+
+		/** This action is documented in wp-includes/rest-api/endpoints/class-wp-rest-comments-controller.php */
+		do_action( 'rest_after_insert_comment', $comment, $request, false );
+
+		$response = $this->prepare_item_for_response( $comment, $request );
+
+		return rest_ensure_response( $response );
 	}
 
 	/**
