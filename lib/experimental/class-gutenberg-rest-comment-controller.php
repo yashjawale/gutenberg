@@ -15,34 +15,6 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 	const VALID_BLOCK_COMMENT_STATUSES = array( 'resolved', 'reopen' );
 
 	/**
-	 * Creates a comment.
-	 *
-	 * @since 6.9.0
-	 *
-	 * @param WP_REST_Request $request Full details about the request.
-	 * @return WP_REST_Response|WP_Error Response object on success, or WP_Error object on failure.
-	 */
-	public function create_item( $request ) {
-		// Validate block comment metadata if present
-		if ( ! empty( $request['meta'] ) && isset( $request['meta']['_wp_block_comment_status'] ) ) {
-			$status = $request['meta']['_wp_block_comment_status'];
-			if ( ! in_array( $status, self::VALID_BLOCK_COMMENT_STATUSES, true ) ) {
-				return new WP_Error(
-					'rest_invalid_block_comment_status',
-					sprintf(
-						/* translators: %s: List of valid statuses */
-						__( 'Invalid block comment status. Must be one of: %s', 'gutenberg' ),
-						implode( ', ', self::VALID_BLOCK_COMMENT_STATUSES )
-					),
-					array( 'status' => 400 )
-				);
-			}
-		}
-
-		return parent::create_item( $request );
-	}
-
-	/**
 	 * Updates a comment.
 	 *
 	 * @since 6.9.0
@@ -51,7 +23,7 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 	 * @return WP_REST_Response|WP_Error Response object on success, or WP_Error object on failure.
 	 */
 	public function update_item( $request ) {
-		// Validate block comment metadata if present
+		// Validate block comment metadata if present.
 		if ( ! empty( $request['meta'] ) && isset( $request['meta']['_wp_block_comment_status'] ) ) {
 			$status = $request['meta']['_wp_block_comment_status'];
 			if ( ! in_array( $status, self::VALID_BLOCK_COMMENT_STATUSES, true ) ) {
@@ -352,6 +324,22 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 		}
 
 		// Note: Removes non-default comment type check for the backport.
+
+		// Validate block comment metadata if present [backport].
+		if ( ! empty( $request['meta'] ) && isset( $request['meta']['_wp_block_comment_status'] ) ) {
+			$status = $request['meta']['_wp_block_comment_status'];
+			if ( ! in_array( $status, self::VALID_BLOCK_COMMENT_STATUSES, true ) ) {
+				return new WP_Error(
+					'rest_invalid_block_comment_status',
+					sprintf(
+						/* translators: %s: List of valid statuses */
+						__( 'Invalid block comment status. Must be one of: %s', 'gutenberg' ),
+						implode( ', ', self::VALID_BLOCK_COMMENT_STATUSES )
+					),
+					array( 'status' => 400 )
+				);
+			}
+		}
 
 		$prepared_comment = $this->prepare_item_for_database( $request );
 		if ( is_wp_error( $prepared_comment ) ) {
