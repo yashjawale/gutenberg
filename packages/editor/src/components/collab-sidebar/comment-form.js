@@ -15,7 +15,7 @@ import {
 	VisuallyHidden,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { useInstanceId } from '@wordpress/compose';
+import { useInstanceId, useDebounce } from '@wordpress/compose';
 
 /**
  * Internal dependencies
@@ -31,6 +31,7 @@ import { sanitizeCommentString } from './utils';
  * @param {Object}   props.thread           - The comment thread object.
  * @param {string}   props.submitButtonText - The text to display on the submit button.
  * @param {string?}  props.labelText        - The label text for the comment input.
+ * @param {Function} props.reflowComments   - The function to call when the comment is updated.
  * @return {React.ReactNode} The CommentForm component.
  */
 function CommentForm( {
@@ -39,10 +40,18 @@ function CommentForm( {
 	thread,
 	submitButtonText,
 	labelText,
+	reflowComments,
 } ) {
 	const [ inputComment, setInputComment ] = useState(
 		thread?.content?.raw ?? ''
 	);
+
+	// Regularly trigger a reflow as the user types since the textarea may grow or shrink.
+	const debouncedCommentUpdated = useDebounce( reflowComments, 100 );
+
+	const updateComment = ( value ) => {
+		setInputComment( value );
+	};
 
 	const inputId = useInstanceId( CommentForm, 'comment-input' );
 	const isDisabled =
@@ -60,9 +69,10 @@ function CommentForm( {
 			<TextareaAutosize
 				id={ inputId }
 				value={ inputComment ?? '' }
-				onChange={ ( comment ) =>
-					setInputComment( comment.target.value )
-				}
+				onChange={ ( comment ) => {
+					updateComment( comment.target.value );
+					debouncedCommentUpdated();
+				} }
 				rows={ 1 }
 				maxRows={ 20 }
 			/>

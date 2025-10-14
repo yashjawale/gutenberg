@@ -18,11 +18,13 @@ import postcss from 'postcss';
 import autoprefixer from 'autoprefixer';
 import rtlcss from 'rtlcss';
 import cssnano from 'cssnano';
+import babel from 'esbuild-plugin-babel';
 
 /**
  * Internal dependencies
  */
 import { V2_PACKAGES } from './v2-packages.js';
+import { groupByDepth } from './dependency-graph.js';
 
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 
@@ -52,6 +54,21 @@ const define = {
 		process.env.NODE_ENV === 'development'
 	),
 };
+
+/**
+ * Create emotion babel plugin for esbuild.
+ * This plugin enables emotion's babel transformations for proper CSS-in-JS handling.
+ *
+ * @return {Object} esbuild plugin.
+ */
+function emotionBabelPlugin() {
+	return babel( {
+		filter: /\.[jt]sx?$/,
+		config: {
+			plugins: [ '@emotion/babel-plugin' ],
+		},
+	} );
+}
 
 /**
  * Normalize path separators for cross-platform compatibility.
@@ -404,6 +421,10 @@ function wordpressExternalsPlugin(
 					outputDir,
 					`${ assetName }.asset.php`
 				);
+
+				await mkdir( path.dirname( assetFilePath ), {
+					recursive: true,
+				} );
 				await writeFile( assetFilePath, assetContent );
 			} );
 		},
@@ -489,26 +510,25 @@ async function bundlePackage( packageName ) {
 			};
 		}
 
+		const bundlePlugins = [
+			momentTimezoneAliasPlugin(),
+			wordpressExternalsPlugin( 'index.min', 'iife' ),
+		];
+
 		builds.push(
 			esbuild.build( {
 				...baseConfig,
 				outfile: path.join( outputDir, 'index.min.js' ),
 				minify: true,
 				define,
-				plugins: [
-					momentTimezoneAliasPlugin(),
-					wordpressExternalsPlugin( 'index.min', 'iife' ),
-				],
+				plugins: bundlePlugins,
 			} ),
 			esbuild.build( {
 				...baseConfig,
 				outfile: path.join( outputDir, 'index.js' ),
 				minify: false,
 				define,
-				plugins: [
-					momentTimezoneAliasPlugin(),
-					wordpressExternalsPlugin( 'index.min', 'iife' ),
-				],
+				plugins: bundlePlugins,
 			} )
 		);
 	}
@@ -538,6 +558,10 @@ async function bundlePackage( packageName ) {
 					: exportName.replace( /^\.\//, '' );
 			const entryPoint = path.join( packageDir, exportPath );
 
+			const modulePlugins = [
+				wordpressExternalsPlugin( `${ fileName }.min`, 'esm' ),
+			];
+
 			builds.push(
 				esbuild.build( {
 					entryPoints: [ entryPoint ],
@@ -552,9 +576,7 @@ async function bundlePackage( packageName ) {
 					platform: 'browser',
 					minify: true,
 					define,
-					plugins: [
-						wordpressExternalsPlugin( `${ fileName }.min`, 'esm' ),
-					],
+					plugins: modulePlugins,
 				} )
 			);
 		}
@@ -664,6 +686,11 @@ async function transpilePackage( packageName ) {
 
 	const builds = [];
 
+	// Check if this is the components package that needs emotion babel plugin
+	// Ideally we should remove this exception and move away from emotion.
+	const needsEmotionPlugin = packageName === 'components';
+	const plugins = needsEmotionPlugin ? [ emotionBabelPlugin() ] : [];
+
 	// Build CJS and copy JSON files to build directory
 	if ( packageJson.main ) {
 		builds.push(
@@ -681,6 +708,7 @@ async function transpilePackage( packageName ) {
 				loader: {
 					'.js': 'jsx',
 				},
+				plugins,
 			} )
 		);
 
@@ -714,6 +742,7 @@ async function transpilePackage( packageName ) {
 				loader: {
 					'.js': 'jsx',
 				},
+				plugins,
 			} )
 		);
 
@@ -739,71 +768,84 @@ async function transpilePackage( packageName ) {
 
 /**
  * Compile styles for a single package.
+ * Discovers and compiles all .scss entry points in src/ directory (matching v1 behavior).
  *
  * @param {string} packageName Package name.
  * @return {Promise<number|null>} Build time in milliseconds, or null if no styles.
  */
 async function compileStyles( packageName ) {
 	const packageDir = path.join( PACKAGES_DIR, packageName );
-	const styleEntryPath = path.join( packageDir, 'src', 'style.scss' );
 
-	// Check if style entry point exists
-	try {
-		await readFile( styleEntryPath );
-	} catch {
+	// Find all .scss entry points in src/ root (match v1 behavior)
+	const styleEntries = await glob(
+		normalizePath( path.join( packageDir, 'src/*.scss' ) )
+	);
+
+	if ( styleEntries.length === 0 ) {
 		return null;
 	}
 
 	const startTime = Date.now();
 	const buildStyleDir = path.join( packageDir, 'build-style' );
-
-	// Create build-style directory
 	await mkdir( buildStyleDir, { recursive: true } );
 
-	// Build with Sass plugin
-	await esbuild.build( {
-		entryPoints: [ styleEntryPath ],
-		outdir: buildStyleDir,
-		bundle: true,
-		write: false,
-		loader: {
-			'.scss': 'css',
-		},
-		plugins: [
-			sassPlugin( {
-				loadPaths: [
-					'node_modules',
-					path.join( PACKAGES_DIR, 'base-styles' ),
-				],
-				async transform( source ) {
-					// Process with autoprefixer for LTR version
-					const ltrResult = await postcss( [
-						autoprefixer( { grid: true } ),
-					] ).process( source, { from: undefined } );
+	// Compile each style entry point
+	await Promise.all(
+		styleEntries.map( async ( styleEntryPath ) => {
+			const entryName = path.basename( styleEntryPath, '.scss' );
 
-					// Process with rtlcss for RTL version
-					const rtlResult = await postcss( [ rtlcss() ] ).process(
-						ltrResult.css,
-						{ from: undefined }
-					);
-
-					// Write both versions
-					await Promise.all( [
-						writeFile(
-							path.join( buildStyleDir, 'style.css' ),
-							ltrResult.css
-						),
-						writeFile(
-							path.join( buildStyleDir, 'style-rtl.css' ),
-							rtlResult.css
-						),
-					] );
-
-					return '';
+			// Build with Sass plugin
+			await esbuild.build( {
+				entryPoints: [ styleEntryPath ],
+				outdir: buildStyleDir,
+				bundle: true,
+				write: false,
+				loader: {
+					'.scss': 'css',
 				},
-			} ),
-		],
-	} );
+				plugins: [
+					sassPlugin( {
+						embedded: true,
+						loadPaths: [
+							'node_modules',
+							path.join( PACKAGES_DIR, 'base-styles' ),
+						],
+						async transform( source ) {
+							// Process with autoprefixer for LTR version
+							const ltrResult = await postcss( [
+								autoprefixer( { grid: true } ),
+							] ).process( source, { from: undefined } );
+
+							// Process with rtlcss for RTL version
+							const rtlResult = await postcss( [
+								rtlcss(),
+							] ).process( ltrResult.css, { from: undefined } );
+
+							// Write both versions
+							await Promise.all( [
+								writeFile(
+									path.join(
+										buildStyleDir,
+										`${ entryName }.css`
+									),
+									ltrResult.css
+								),
+								writeFile(
+									path.join(
+										buildStyleDir,
+										`${ entryName }-rtl.css`
+									),
+									rtlResult.css
+								),
+							] );
+
+							return '';
+						},
+					} ),
+				],
+			} );
+		} )
+	);
 
 	return Date.now() - startTime;
 }
@@ -867,14 +909,23 @@ async function buildAll() {
 
 	const startTime = Date.now();
 
-	// Phase 1: Transpile all packages in parallel
+	// Group packages by dependency depth
+	const levels = groupByDepth( V2_PACKAGES );
+
+	// Phase 1: Transpile packages level by level (respecting dependencies)
 	console.log( '📝 Phase 1: Transpiling packages...\n' );
-	await Promise.all(
-		V2_PACKAGES.map( async ( packageName ) => {
-			const buildTime = await transpilePackage( packageName );
-			console.log( `✔ Transpiled ${ packageName } (${ buildTime }ms)` );
-		} )
-	);
+
+	for ( let i = 0; i < levels.length; i++ ) {
+		const level = levels[ i ];
+		await Promise.all(
+			level.map( async ( packageName ) => {
+				const buildTime = await transpilePackage( packageName );
+				console.log(
+					`   ✔ Transpiled ${ packageName } (${ buildTime }ms)`
+				);
+			} )
+		);
+	}
 
 	// Phase 2: Bundle packages with wpScript in parallel
 	console.log( '\n📦 Phase 2: Bundling packages...\n' );

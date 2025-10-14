@@ -6,7 +6,7 @@ import clsx from 'clsx';
 /**
  * WordPress dependencies
  */
-import { useState, RawHTML, useEffect } from '@wordpress/element';
+import { useState, RawHTML, useEffect, useCallback } from '@wordpress/element';
 import {
 	__experimentalText as Text,
 	__experimentalHStack as HStack,
@@ -34,6 +34,7 @@ import { unlock } from '../../lock-unlock';
 import CommentAuthorInfo from './comment-author-info';
 import CommentForm from './comment-form';
 import { getCommentExcerpt, focusCommentThread } from './utils';
+import { useFloatingThread } from './hooks';
 
 const { useBlockElement } = unlock( blockEditorPrivateApis );
 const { Menu } = unlock( componentsPrivateApis );
@@ -48,6 +49,9 @@ const { Menu } = unlock( componentsPrivateApis );
  * @param {Function} props.onCommentDelete     - The function to delete a comment.
  * @param {Function} props.setShowCommentBoard - The function to set the comment board visibility.
  * @param {Ref}      props.commentSidebarRef   - The ref to the comment sidebar.
+ * @param {Function} props.reflowComments      - The function to call indicating a comment is updated.
+ * @param {boolean}  props.isFloating          - Whether the comment thread is floating.
+ * @param {number}   props.commentLastUpdated  - Timestamp of the last comment update.
  * @return {React.ReactNode} The rendered Comments component.
  */
 export function Comments( {
@@ -57,19 +61,34 @@ export function Comments( {
 	onCommentDelete,
 	setShowCommentBoard,
 	commentSidebarRef,
+	reflowComments,
+	isFloating = false,
+	commentLastUpdated,
 } ) {
-	const { blockCommentId, selectedBlockClientId } = useSelect( ( select ) => {
-		const { getBlockAttributes, getSelectedBlockClientId } =
-			select( blockEditorStore );
-		const clientId = getSelectedBlockClientId();
-		return {
-			blockCommentId: clientId
-				? getBlockAttributes( clientId )?.metadata?.commentId
-				: null,
-			selectedBlockClientId: clientId,
-		};
-	}, [] );
-	const [ selectedThread = blockCommentId, setSelectedThread ] = useState();
+	const [ heights, setHeights ] = useState( {} );
+	const [ selectedThread, setSelectedThread ] = useState( null );
+	const [ boardOffsets, setBoardOffsets ] = useState( {} );
+	const [ blockRefs, setBlockRefs ] = useState( {} );
+
+	const { blockCommentId, selectedBlockClientId, blockIds } = useSelect(
+		( select ) => {
+			const {
+				getBlockAttributes,
+				getSelectedBlockClientId,
+				getBlockOrder,
+			} = select( blockEditorStore );
+			const clientId = getSelectedBlockClientId();
+			return {
+				blockCommentId: clientId
+					? getBlockAttributes( clientId )?.metadata?.commentId
+					: null,
+				selectedBlockClientId: clientId,
+				blockIds: getBlockOrder(),
+			};
+		},
+		[]
+	);
+
 	const relatedBlockElement = useBlockElement( selectedBlockClientId );
 
 	const handleDelete = async ( comment ) => {
@@ -99,6 +118,69 @@ export function Comments( {
 		setSelectedThread( blockCommentId ?? undefined );
 	}, [ blockCommentId ] );
 
+	const setBlockRef = useCallback( ( id, blockRef ) => {
+		setBlockRefs( ( prev ) => ( { ...prev, [ id ]: blockRef } ) );
+	}, [] );
+
+	// Recalculate floating comment thread offsets whenever the heights change.
+	useEffect( () => {
+		/**
+		 * Calculate the y offsets for all comment threads. Account for potentially
+		 * overlapping threads and adjust their positions accordingly.
+		 */
+		const calculateAllOffsets = () => {
+			const offsets = {};
+			let previousThreadData = null;
+
+			if ( ! isFloating ) {
+				return;
+			}
+
+			// Go through the comment threads from top to bottom.
+			threads.forEach( ( thread ) => {
+				if ( ! blockRefs[ thread.id ] ) {
+					return;
+				}
+				// The thread's starting top position is determined by its
+				// associated block's position.
+				const blockElement = blockRefs[ thread.id ];
+				const blockRect = blockElement?.getBoundingClientRect();
+				const threadTop = blockRect?.top || 0;
+
+				// Heights are tracked by the comment threads themselves.
+				const threadHeight = heights[ thread.id ] || 0;
+
+				// By default, remove the top margin by shifting the block up
+				// so it more precisely aligns with the block.
+				let additionalOffset = -16;
+
+				// The first block never needs to be adjusted.
+				if ( previousThreadData ) {
+					// Check if the thread overlaps with the previous one.
+					const previousBottom =
+						previousThreadData.threadTop +
+						previousThreadData.threadHeight;
+					if ( threadTop < previousBottom ) {
+						// Shift down by the difference plus a margin to avoid overlap.
+						additionalOffset = previousBottom - threadTop + 20;
+					}
+				}
+
+				// Store the current thread's position and height for the next iteration.
+				previousThreadData = {
+					threadTop: threadTop + additionalOffset,
+					threadHeight,
+				};
+
+				offsets[ thread.id ] = additionalOffset;
+			} );
+
+			return offsets;
+		};
+		const newOffsets = calculateAllOffsets();
+		setBoardOffsets( newOffsets );
+	}, [ heights, blockIds, blockRefs, isFloating, threads ] );
+
 	const hasThreads = Array.isArray( threads ) && threads.length > 0;
 	if ( ! hasThreads ) {
 		return (
@@ -116,19 +198,37 @@ export function Comments( {
 		);
 	}
 
-	return threads.map( ( thread ) => (
-		<Thread
-			key={ thread.id }
-			thread={ thread }
-			onAddReply={ onAddReply }
-			onCommentDelete={ handleDelete }
-			onEditComment={ onEditComment }
-			isSelected={ selectedThread === thread.id }
-			setSelectedThread={ setSelectedThread }
-			setShowCommentBoard={ setShowCommentBoard }
-			commentSidebarRef={ commentSidebarRef }
-		/>
-	) );
+	return (
+		<VStack spacing="3">
+			{ ! isFloating && (
+				<Text as="p" variant="muted">
+					{ __( 'Only logged in users can see Notes' ) }
+				</Text>
+			) }
+			{ threads.map( ( thread ) => (
+				<Thread
+					key={ thread.id }
+					thread={ thread }
+					onAddReply={ onAddReply }
+					onCommentDelete={ handleDelete }
+					onEditComment={ onEditComment }
+					isSelected={ selectedThread === thread.id }
+					setSelectedThread={ setSelectedThread }
+					setShowCommentBoard={ setShowCommentBoard }
+					commentSidebarRef={ commentSidebarRef }
+					reflowComments={ reflowComments }
+					isFloating={ isFloating }
+					calculatedOffset={
+						boardOffsets ? boardOffsets[ thread.id ] : 0
+					}
+					setHeights={ setHeights }
+					setBlockRef={ setBlockRef }
+					selectedThread={ selectedThread }
+					commentLastUpdated={ commentLastUpdated }
+				/>
+			) ) }
+		</VStack>
+	);
 }
 
 function Thread( {
@@ -137,9 +237,16 @@ function Thread( {
 	onAddReply,
 	onCommentDelete,
 	isSelected,
-	setSelectedThread,
 	setShowCommentBoard,
 	commentSidebarRef,
+	reflowComments,
+	isFloating,
+	calculatedOffset,
+	setHeights,
+	setBlockRef,
+	setSelectedThread,
+	selectedThread,
+	commentLastUpdated,
 } ) {
 	const { toggleBlockHighlight, selectBlock, toggleBlockSpotlight } = unlock(
 		useDispatch( blockEditorStore )
@@ -149,6 +256,14 @@ function Thread( {
 		toggleBlockHighlight,
 		50
 	);
+	const { y, refs } = useFloatingThread( {
+		thread,
+		calculatedOffset,
+		setHeights,
+		setBlockRef,
+		selectedThread,
+		commentLastUpdated,
+	} );
 
 	const onMouseEnter = () => {
 		debouncedToggleBlockHighlight( thread.blockClientId, true );
@@ -200,9 +315,10 @@ function Thread( {
 		<VStack
 			className={ clsx( 'editor-collab-sidebar-panel__thread', {
 				'is-selected': isSelected,
+				'is-floating': isFloating,
 			} ) }
 			id={ `comment-thread-${ thread.id }` }
-			spacing="2"
+			spacing={ isFloating ? '0' : '2' }
 			onClick={ handleCommentSelect }
 			onMouseEnter={ onMouseEnter }
 			onMouseLeave={ onMouseLeave }
@@ -230,6 +346,8 @@ function Thread( {
 			role="listitem"
 			aria-label={ ariaLabel }
 			aria-expanded={ isSelected }
+			ref={ isFloating ? refs.setFloating : undefined }
+			style={ isFloating ? { top: y } : undefined }
 		>
 			<Button
 				className="editor-collab-sidebar-panel__skip-to-comment"
@@ -265,6 +383,7 @@ function Thread( {
 					}
 				} }
 				onDelete={ onCommentDelete }
+				reflowComments={ reflowComments }
 			/>
 			{ isSelected &&
 				allReplies.map( ( reply ) => (
@@ -280,6 +399,7 @@ function Thread( {
 							isExpanded={ isSelected }
 							onEdit={ onEditComment }
 							onDelete={ onCommentDelete }
+							reflowComments={ reflowComments }
 						/>
 					</VStack>
 				) ) }
@@ -316,6 +436,7 @@ function Thread( {
 					isExpanded={ isSelected }
 					onEdit={ onEditComment }
 					onDelete={ onCommentDelete }
+					reflowComments={ reflowComments }
 				/>
 			) }
 			{ isSelected && (
@@ -364,6 +485,7 @@ function Thread( {
 								thread.id,
 								thread?.author_name || 'Unknown'
 							) }
+							reflowComments={ reflowComments }
 						/>
 					</VStack>
 				</VStack>
@@ -383,7 +505,14 @@ function Thread( {
 	);
 }
 
-const CommentBoard = ( { thread, parent, isExpanded, onEdit, onDelete } ) => {
+const CommentBoard = ( {
+	thread,
+	parent,
+	isExpanded,
+	onEdit,
+	onDelete,
+	reflowComments,
+} ) => {
 	const [ actionState, setActionState ] = useState( false );
 	const [ showConfirmDialog, setShowConfirmDialog ] = useState( false );
 
@@ -524,6 +653,7 @@ const CommentBoard = ( { thread, parent, isExpanded, onEdit, onDelete } ) => {
 						thread.id,
 						thread?.author_name || 'Unknown'
 					) }
+					reflowComments={ reflowComments }
 				/>
 			) : (
 				<RawHTML
