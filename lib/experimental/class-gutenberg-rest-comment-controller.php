@@ -395,12 +395,6 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 			return $prepared_comment['comment_approved'];
 		}
 
-		// [backport].
-		if ( ! empty( $request['comment_type'] ) && 'block_comment' === $request['comment_type'] ) {
-			$prepared_comment['comment_type']     = $request['comment_type'];
-			$prepared_comment['comment_approved'] = $request['comment_approved'];
-		}
-
 		/**
 		 * Filters a comment before it is inserted via the REST API.
 		 *
@@ -557,7 +551,11 @@ class Gutenberg_REST_Comment_Controller extends WP_REST_Comments_Controller {
 		}
 
 		// Allow empty block comments with resolution metadata [backport].
-		if ( isset( $check['meta']['_wp_block_comment_status'] ) ) {
+		if (
+			isset( $check['comment_type'] ) &&
+			'block_comment' === $check['comment_type'] &&
+			isset( $check['meta']['_wp_block_comment_status'] )
+		) {
 			return true;
 		}
 

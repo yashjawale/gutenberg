@@ -213,8 +213,8 @@ export function useBlockCommentsActions() {
 				const newCommentData = {
 					post: getCurrentPostId(),
 					content: content || '', // Empty content for resolve, content for reopen.
-					comment_type: 'block_comment',
-					comment_approved: status === 'approved' ? 1 : 0,
+					type: 'block_comment',
+					status,
 					parent: id,
 					meta: {
 						_wp_block_comment_status:
