@@ -405,14 +405,18 @@ interface PrivateStore {
 }
 
 // Create the private store for internal navigation properties
-const { state: privateState } = store< PrivateStore >( 'core/router/private', {
-	state: {
-		navigation: {
-			hasStarted: false,
-			hasFinished: false,
+const { state: privateState } = store< PrivateStore >(
+	'core/router/private',
+	{
+		state: {
+			navigation: {
+				hasStarted: false,
+				hasFinished: false,
+			},
 		},
 	},
-} );
+	{ lock: true }
+);
 
 export const { state, actions } = store< Store >( 'core/router', {
 	state: {
