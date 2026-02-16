@@ -25,6 +25,7 @@ const {
 	routerRegions,
 	h: createElement,
 	navigationSignal,
+	warn,
 } = privateApis(
 	'I acknowledge that using private APIs means my theme or plugin will inevitably break in the next version of WordPress.'
 );
@@ -419,12 +420,8 @@ export const { state, actions } = store< Store >( 'core/router', {
 		get navigation() {
 			// Deprecation warning for hasStarted and hasFinished properties.
 			// TODO: Remove this in a future version.
-			if (
-				typeof window !== 'undefined' &&
-				window.console &&
-				window.console.warn
-			) {
-				window.console.warn(
+			if ( globalThis.SCRIPT_DEBUG ) {
+				warn(
 					'core/router store navigation.hasStarted and navigation.hasFinished properties are part of the private API and its usage is discouraged.'
 				);
 			}
