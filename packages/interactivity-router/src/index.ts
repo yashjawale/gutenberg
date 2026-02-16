@@ -395,17 +395,7 @@ interface Store {
 	};
 }
 
-interface PrivateStore {
-	state: {
-		navigation: {
-			hasStarted: boolean;
-			hasFinished: boolean;
-		};
-	};
-}
-
-// Create the private store for internal navigation properties
-const { state: privateState } = store< PrivateStore >(
+const { state: privateState } = store(
 	'core/router/private',
 	{
 		state: {
@@ -421,11 +411,9 @@ const { state: privateState } = store< PrivateStore >(
 export const { state, actions } = store< Store >( 'core/router', {
 	state: {
 		get navigation() {
-			// Deprecation warning for hasStarted and hasFinished properties.
-			// TODO: Remove this in a future version.
 			if ( globalThis.SCRIPT_DEBUG ) {
 				warn(
-					'core/router store navigation.hasStarted and navigation.hasFinished properties are part of the private API and its usage is discouraged.'
+					`The usage of state.navigation.{hasStarted|hasFinished} from core/router is deprecated and will stop working in WordPress 7.1.`
 				);
 			}
 			return privateState.navigation;
