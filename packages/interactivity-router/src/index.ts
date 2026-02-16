@@ -420,7 +420,6 @@ const { state: privateState } = store< PrivateStore >(
 
 export const { state, actions } = store< Store >( 'core/router', {
 	state: {
-		url: window.location.href,
 		get navigation() {
 			// Deprecation warning for hasStarted and hasFinished properties.
 			// TODO: Remove this in a future version.
@@ -575,6 +574,9 @@ export const { state, actions } = store< Store >( 'core/router', {
 		},
 	},
 } );
+
+// Initialize the URL in the state if it hasn't been set yet in the server.
+state.url = state.url || window.location.href;
 
 /**
  * Announces a message to screen readers.
