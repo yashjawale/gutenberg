@@ -394,12 +394,41 @@ interface Store {
 	};
 }
 
-export const { state, actions } = store< Store >( 'core/router', {
+interface PrivateStore {
 	state: {
-		url: window.location.href,
+		navigation: {
+			hasStarted: boolean;
+			hasFinished: boolean;
+		};
+	};
+}
+
+// Create the private store for internal navigation properties
+const { state: privateState } = store< PrivateStore >( 'core/router/private', {
+	state: {
 		navigation: {
 			hasStarted: false,
 			hasFinished: false,
+		},
+	},
+} );
+
+export const { state, actions } = store< Store >( 'core/router', {
+	state: {
+		url: window.location.href,
+		get navigation() {
+			// Deprecation warning for hasStarted and hasFinished properties.
+			// TODO: Remove this in a future version.
+			if (
+				typeof window !== 'undefined' &&
+				window.console &&
+				window.console.warn
+			) {
+				window.console.warn(
+					'core/router store navigation.hasStarted and navigation.hasFinished properties are part of the private API and its usage is discouraged.'
+				);
+			}
+			return privateState.navigation;
 		},
 	},
 	actions: {
@@ -428,7 +457,7 @@ export const { state, actions } = store< Store >( 'core/router', {
 			}
 
 			const pagePath = getPagePath( href );
-			const { navigation } = state;
+			const { navigation } = privateState;
 			const {
 				loadingAnimation = true,
 				screenReaderAnnouncement = true,
