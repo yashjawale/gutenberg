@@ -18,7 +18,9 @@ export type QueryOperator = '<' | '>=';
  * A viewport query string combining operator and breakpoint.
  * Examples: '< small', '>= medium', 'large' (defaults to '>= large')
  */
-export type ViewportQuery = string;
+export type ViewportQuery =
+	| BreakpointName
+	| `${ QueryOperator } ${ BreakpointName }`;
 
 /**
  * Hash of breakpoint names with pixel width at which it becomes effective.
