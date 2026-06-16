@@ -17,6 +17,9 @@ type GitHub = ReturnType< typeof getOctokit >;
 type Milestone = Awaited<
 	ReturnType< GitHub[ 'rest' ][ 'issues' ][ 'listMilestones' ] >
 >[ 'data' ][ 0 ];
+/** @typedef {import('@octokit/request-error').RequestError} RequestError */
+/** @typedef {ReturnType<typeof import('@actions/github').getOctokit>} GitHub */
+/** @typedef {import('@octokit/webhooks-types').EventPayloadMap['push']} WebhookPayloadPush */
 
 /**
  * Number of expected days elapsed between releases.

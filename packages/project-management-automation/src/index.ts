@@ -20,6 +20,8 @@ type GitHub = ReturnType< typeof getOctokit >;
 
 /**
  * Automation task function.
+ *
+ * @typedef {( payload: any, octokit: ReturnType<typeof getOctokit> ) => void} WPAutomationTask
  */
 type WPAutomationTask = ( payload: any, octokit: GitHub ) => Promise< void >;
 

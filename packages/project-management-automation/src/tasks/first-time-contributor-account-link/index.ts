@@ -15,6 +15,8 @@ import hasWordPressProfile from '../../has-wordpress-profile';
  * Type definitions
  */
 type GitHub = ReturnType< typeof getOctokit >;
+/** @typedef {import('@octokit/webhooks-types').EventPayloadMap['push']} WebhookPayloadPush */
+/** @typedef {import('../../get-associated-pull-request').WebhookPayloadPushCommit} WebhookPayloadPushCommit */
 
 /**
  * Returns the message text to be used for the comment prompting contributor to

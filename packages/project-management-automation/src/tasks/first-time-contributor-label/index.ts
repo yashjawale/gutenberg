@@ -13,6 +13,8 @@ import debug from '../../debug';
  * Type definitions
  */
 type GitHub = ReturnType< typeof getOctokit >;
+/** @typedef {ReturnType<typeof import('@actions/github').getOctokit>} GitHub */
+/** @typedef {import('@octokit/webhooks-types').EventPayloadMap['pull_request']} WebhookPayloadPullRequest */
 
 /**
  * Assigns the first-time contributor label to PRs.
