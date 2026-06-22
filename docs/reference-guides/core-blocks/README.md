@@ -807,8 +807,8 @@ Give special visual emphasis to a quote from your text.
 
 -	**Name:** [core/pullquote](https://developer.wordpress.org/block-editor/reference-guides/core-blocks/core-blocks-text/core-block-pullquote/)
 -	**Category:** [text](https://developer.wordpress.org/block-editor/reference-guides/core-blocks/core-blocks-text/)
--	**Supports:** align (full, left, right, wide), anchor, background (backgroundImage, backgroundSize), color (background, gradients, link, text), dimensions (minHeight), interactivity (clientNavigation), spacing (margin, padding), typography (fontSize, lineHeight)
--	**Attributes:** citation, textAlign, value
+-	**Supports:** align (full, left, right, wide), anchor, background (backgroundImage, backgroundSize), color (background, gradients, link, text), dimensions (minHeight), interactivity (clientNavigation), spacing (margin, padding), typography (fontSize, lineHeight, textAlign)
+-	**Attributes:** citation, value
 
 ## Query Loop
 
@@ -922,7 +922,7 @@ Help visitors find your content.
 -	**Name:** [core/search](https://developer.wordpress.org/block-editor/reference-guides/core-blocks/core-blocks-widgets/core-block-search/)
 -	**Category:** [widgets](https://developer.wordpress.org/block-editor/reference-guides/core-blocks/core-blocks-widgets/)
 -	**Supports:** align (center, left, right), anchor, color (background, gradients, text), interactivity, spacing (margin), typography (fontSize, lineHeight), ~~html~~
--	**Attributes:** buttonPosition, buttonText, buttonUseIcon, label, placeholder, query, showLabel, width, widthUnit
+-	**Attributes:** buttonPosition, buttonText, buttonUseIcon, label, placeholder, query, showLabel, tagName, width, widthUnit
 
 ## Separator
 
