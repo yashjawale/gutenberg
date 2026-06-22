@@ -156,12 +156,6 @@ jobs:
             - name: Setup Node.js and install dependencies
               uses: ./.github/setup-node
 
-            - name: Build report flaky tests package
-              run: |
-                  shopt -s globstar
-                  files=(packages/report-flaky-tests/src/**/*.ts)
-                  node bin/packages/build.js "${files[@]}"
-
             - name: Npm build
               run: npm run build -- --skip-types
 
