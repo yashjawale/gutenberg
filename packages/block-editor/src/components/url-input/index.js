@@ -153,6 +153,8 @@ function reducer( state, action ) {
  * @param {Function} [props.__experimentalRenderControl]          A function to render the control.
  * @param {Function} [props.__experimentalRenderSuggestions]      A function to render the suggestions.
  * @param {Object}   [props.autocompleteRef]                      A ref for the autocomplete popover.
+ * @param {Object}   [props.inputRef]                             A ref for the input.
+ * @param {boolean}  [props.disabled]                             Whether the input is disabled.
  * @param {string}   props.instanceId                             The instance ID of the component.
  * @param {Function} props.speak                                  A function to speak a message.
  * @param {Function} props.debouncedSpeak                         A function to speak a message with a debounce.
@@ -180,8 +182,10 @@ function URLInput( props ) {
 		speak,
 		suffix,
 		required,
+		disabled,
 		customValidity,
 		markWhenOptional,
+		inputRef: inputRefProp,
 		value = '',
 	} = props;
 
@@ -196,7 +200,8 @@ function URLInput( props ) {
 	} = state;
 
 	// Refs for DOM nodes and instance variables that don't trigger re-renders.
-	const inputRef = useRef( null );
+	const localInputRef = useRef( null );
+	const inputRef = inputRefProp || localInputRef;
 	const autocompleteRef = useRef( autocompleteRefProp?.current );
 	const suggestionNodes = useRef( [] );
 	const suggestionsRequestRef = useRef( null );
@@ -426,7 +431,7 @@ function URLInput( props ) {
 			// Move focus to the input field when a link suggestion is clicked.
 			inputRef.current?.focus();
 		},
-		[ selectLink ]
+		[ selectLink, inputRef ]
 	);
 
 	/**
@@ -622,6 +627,7 @@ function URLInput( props ) {
 			value,
 			required: required ?? true,
 			type: 'text',
+			disabled,
 			onChange,
 			onFocus,
 			placeholder,
