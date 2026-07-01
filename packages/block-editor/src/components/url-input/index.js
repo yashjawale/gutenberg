@@ -199,8 +199,7 @@ function URLInput( props ) {
 	const inputRef = useRef( null );
 	const autocompleteRef = useRef( autocompleteRefProp?.current );
 	const suggestionNodes = useRef( [] );
-	const suggestionsRequest = useRef( null );
-	const hasRenderedValidationRef = useRef( false );
+	const suggestionsRequestRef = useRef( null );
 
 	// Fetch link suggestions from the block editor store if not provided via props.
 	const { fetchLinkSuggestionsFromStore } = useSelect(
@@ -255,8 +254,8 @@ function URLInput( props ) {
 				( 2 > trimmedValue.length ||
 					( ! handleURLSuggestions && isURL( trimmedValue ) ) )
 			) {
-				suggestionsRequest.current?.cancel?.();
-				suggestionsRequest.current = null;
+				suggestionsRequestRef.current?.cancel?.();
+				suggestionsRequestRef.current = null;
 				dispatch( {
 					type: 'CLEAR',
 					payload: { suggestionsValue: trimmedValue },
@@ -269,7 +268,7 @@ function URLInput( props ) {
 			const request = fetchLinkSuggestions( trimmedValue, {
 				isInitialSuggestions,
 			} );
-			suggestionsRequest.current = request;
+			suggestionsRequestRef.current = request;
 
 			request
 				.then( ( newSuggestions ) => {
@@ -278,7 +277,7 @@ function URLInput( props ) {
 					 * comparing the request reference on the instance, which is
 					 * reset or deleted on subsequent requests or unmounting.
 					 */
-					if ( request !== suggestionsRequest.current ) {
+					if ( request !== suggestionsRequestRef.current ) {
 						return;
 					}
 
@@ -308,7 +307,7 @@ function URLInput( props ) {
 					}
 				} )
 				.catch( () => {
-					if ( request !== suggestionsRequest.current ) {
+					if ( request !== suggestionsRequestRef.current ) {
 						return;
 					}
 					dispatch( { type: 'FETCH_FAILURE' } );
@@ -318,8 +317,8 @@ function URLInput( props ) {
 					 * If this is the current promise then reset the reference
 					 * to allow for checking if a new request is made.
 					 */
-					if ( request === suggestionsRequest.current ) {
-						suggestionsRequest.current = null;
+					if ( request === suggestionsRequestRef.current ) {
+						suggestionsRequestRef.current = null;
 					}
 				} );
 		},
@@ -359,7 +358,7 @@ function URLInput( props ) {
 
 		// Cleanup function to cancel any pending requests or debounced calls.
 		return () => {
-			suggestionsRequest.current?.cancel?.();
+			suggestionsRequestRef.current?.cancel?.();
 			debouncedUpdateSuggestions.cancel();
 		};
 	}, [
@@ -444,7 +443,7 @@ function URLInput( props ) {
 			value &&
 			! disableSuggestions &&
 			! ( suggestions && suggestions.length ) &&
-			! suggestionsRequest.current
+			! suggestionsRequestRef.current
 		) {
 			// Ensure the suggestions are updated with the current input value.
 			updateSuggestions( value );
@@ -636,9 +635,12 @@ function URLInput( props ) {
 				null !== selectedSuggestion
 					? `${ suggestionOptionIdPrefix }-${ selectedSuggestion }`
 					: undefined,
-			ref: inputRef,
 			suffix,
 		};
+
+		if ( renderControl ) {
+			return renderControl( controlProps, inputProps, loading );
+		}
 
 		const validationProps = {
 			customValidity,
@@ -647,24 +649,16 @@ function URLInput( props ) {
 			} ),
 		};
 
-		if ( renderControl ) {
-			return renderControl( controlProps, inputProps, loading );
-		}
-
-		// Use ValidatedInputControl if customValidity has ever had a non-undefined value.
-		if ( customValidity !== undefined ) {
-			hasRenderedValidationRef.current = true;
-		}
-
-		const MaybeValidatedInputControl = hasRenderedValidationRef.current
-			? ValidatedInputControl
-			: InputControl;
+		// Use ValidatedInputControl if customValidity has been provided.
+		const MaybeValidatedInputControl =
+			customValidity !== undefined ? ValidatedInputControl : InputControl;
 
 		return (
 			<BaseControl { ...controlProps }>
 				<MaybeValidatedInputControl
 					{ ...inputProps }
-					{ ...( hasRenderedValidationRef.current
+					ref={ inputRef }
+					{ ...( customValidity !== undefined
 						? validationProps
 						: {} ) }
 					__next40pxDefaultSize
