@@ -13,7 +13,7 @@ import { __, sprintf } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import _CustomSelect from '../custom-select-control-v2/custom-select';
+import CustomSelect from '../custom-select-control-v2/custom-select';
 import CustomSelectItem from '../custom-select-control-v2/item';
 import * as Styled from '../custom-select-control-v2/styles';
 import type { CustomSelectProps, CustomSelectOption } from './types';
@@ -43,15 +43,20 @@ function applyOptionDeprecations( {
 	};
 }
 
-function getDescribedBy( currentValue: string, describedBy?: string ) {
+function getDescribedBy( currentName: string, describedBy?: string ) {
 	if ( describedBy ) {
 		return describedBy;
 	}
 
 	// translators: %s: The selected option.
-	return sprintf( __( 'Currently selected: %s' ), currentValue );
+	return sprintf( __( 'Currently selected: %s' ), currentName );
 }
 
+/**
+ * `CustomSelectControl` is a dropdown for selecting a single option from a
+ * list, with support for custom styling. Use it instead of the `SelectControl`
+ * when options need richer markup (e.g. per-option styles or hints).
+ */
 function CustomSelectControl< T extends CustomSelectOption >(
 	props: CustomSelectProps< T >
 ) {
@@ -84,7 +89,7 @@ function CustomSelectControl< T extends CustomSelectOption >(
 	const store = Ariakit.useSelectStore< string >( {
 		async setValue( nextValue ) {
 			const nextOption = options.find(
-				( item ) => item.name === nextValue
+				( item ) => item.key === nextValue
 			);
 
 			if ( ! onChange || ! nextOption ) {
@@ -108,12 +113,12 @@ function CustomSelectControl< T extends CustomSelectOption >(
 			};
 			onChange( changeObject );
 		},
-		value: value?.name,
+		value: value?.key,
 		// Setting the first option as a default value when no value is provided
 		// is already done natively by the underlying Ariakit component,
 		// but doing this explicitly avoids the `onChange` callback from firing
 		// on initial render, thus making this implementation closer to the v1.
-		defaultValue: options[ 0 ]?.name,
+		defaultValue: options[ 0 ]?.key,
 	} );
 
 	const children = options
@@ -134,7 +139,7 @@ function CustomSelectControl< T extends CustomSelectOption >(
 			return (
 				<CustomSelectItem
 					key={ key }
-					value={ name }
+					value={ key }
 					children={ hint ? withHint : name }
 					style={ style }
 					className={ clsx(
@@ -151,22 +156,25 @@ function CustomSelectControl< T extends CustomSelectOption >(
 
 	const currentValue = Ariakit.useStoreState( store, 'value' );
 
-	const renderSelectedValueHint = () => {
-		const selectedOptionHint = options
+	const selectedOption =
+		options
 			?.map( applyOptionDeprecations )
-			?.find( ( { name } ) => currentValue === name )?.hint;
+			?.find( ( { key } ) => currentValue === key ) ?? options[ 0 ];
+
+	const renderSelectedValue = () => {
+		if ( ! showSelectedHint || ! selectedOption.hint ) {
+			return selectedOption?.name;
+		}
 
 		return (
 			<Styled.SelectedExperimentalHintWrapper>
-				{ currentValue }
-				{ selectedOptionHint && (
-					<Styled.SelectedExperimentalHintItem
-						// Keeping the classname for legacy reasons
-						className="components-custom-select-control__hint"
-					>
-						{ selectedOptionHint }
-					</Styled.SelectedExperimentalHintItem>
-				) }
+				{ selectedOption?.name }
+				<Styled.SelectedExperimentalHintItem
+					// Keeping the classname for legacy reasons
+					className="components-custom-select-control__hint"
+				>
+					{ selectedOption?.hint }
+				</Styled.SelectedExperimentalHintItem>
 			</Styled.SelectedExperimentalHintWrapper>
 		);
 	};
@@ -186,11 +194,9 @@ function CustomSelectControl< T extends CustomSelectOption >(
 
 	return (
 		<>
-			<_CustomSelect
+			<CustomSelect
 				aria-describedby={ descriptionId }
-				renderSelectedValue={
-					showSelectedHint ? renderSelectedValueHint : undefined
-				}
+				renderSelectedValue={ renderSelectedValue }
 				size={ translatedSize }
 				store={ store }
 				className={ clsx(
@@ -202,10 +208,10 @@ function CustomSelectControl< T extends CustomSelectOption >(
 				{ ...restProps }
 			>
 				{ children }
-			</_CustomSelect>
+			</CustomSelect>
 			<VisuallyHidden>
 				<span id={ descriptionId }>
-					{ getDescribedBy( currentValue, describedBy ) }
+					{ getDescribedBy( selectedOption?.name, describedBy ) }
 				</span>
 			</VisuallyHidden>
 		</>

@@ -1,3 +1,6 @@
+@use "@wordpress/base-styles/colors" as *;
+@use "@wordpress/base-styles/variables" as *;
+
 .edit-site-editor__editor-interface {
 	opacity: 1;
 
@@ -24,10 +27,11 @@
 	/* stylelint-disable -- Disable reason: View Transitions not supported properly by stylelint. */
 	view-transition-name: toggle;
 	/* stylelint-enable */
+	position: relative;
 	top: 0;
 	left: 0;
-	height: $header-height;
-	width: $header-height;
+	height: $button-size-compact;
+	width: $button-size-compact;
 	z-index: 100;
 
 	.components-button {
@@ -50,12 +54,8 @@
 		}
 	}
 
-	.edit-site-editor__view-mode-toggle-icon {
-		svg,
-		img {
-			background: $gray-900;
-			display: block;
-		}
+	&:hover .edit-site-editor__back-icon {
+		color: var(--wp-admin-theme-color);
 	}
 }
 
@@ -63,21 +63,15 @@
 	position: absolute;
 	top: 0;
 	left: 0;
-	width: 60px;
-	height: 60px;
+	width: $button-size-compact;
+	height: $button-size-compact;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background-color: hsla(0, 0%, 80%);
+	background-color: transparent;
 	pointer-events: none;
 
 	svg {
 		fill: currentColor;
-	}
-
-	&.has-site-icon {
-		background-color: hsla(0, 0%, 100%, 0.6);
-		-webkit-backdrop-filter: saturate(180%) blur(15px);
-		backdrop-filter: saturate(180%) blur(15px);
 	}
 }

@@ -22,6 +22,7 @@ import {
 	Spinner,
 	withSpokenMessages,
 	Popover,
+	privateApis as componentsPrivateApis,
 } from '@wordpress/components';
 import {
 	compose,
@@ -36,6 +37,9 @@ import { isURL } from '@wordpress/url';
  * Internal dependencies
  */
 import { store as blockEditorStore } from '../../store';
+import { unlock } from '../../lock-unlock';
+
+const { ValidatedInputControl } = unlock( componentsPrivateApis );
 
 /**
  * Whether the argument is a function.
@@ -152,7 +156,7 @@ function reducer( state, action ) {
  * @param {string}   props.instanceId                             The instance ID of the component.
  * @param {Function} props.speak                                  A function to speak a message.
  * @param {Function} props.debouncedSpeak                         A function to speak a message with a debounce.
- * @return {JSX.Element} The component.
+ * @return {React.JSX.Element} The component.
  */
 function URLInput( props ) {
 	const {
@@ -175,6 +179,9 @@ function URLInput( props ) {
 		placeholder = __( 'Paste URL or type to search' ),
 		speak,
 		suffix,
+		required,
+		customValidity,
+		markWhenOptional,
 		value = '',
 	} = props;
 
@@ -193,6 +200,7 @@ function URLInput( props ) {
 	const autocompleteRef = useRef( autocompleteRefProp?.current );
 	const suggestionNodes = useRef( [] );
 	const suggestionsRequest = useRef( null );
+	const hasRenderedValidationRef = useRef( false );
 
 	// Fetch link suggestions from the block editor store if not provided via props.
 	const { fetchLinkSuggestionsFromStore } = useSelect(
@@ -598,7 +606,7 @@ function URLInput( props ) {
 	/**
 	 * Renders the main input control.
 	 *
-	 * @return {JSX.Element} The input control.
+	 * @return {React.JSX.Element} The input control.
 	 */
 	const renderControlComponent = () => {
 		const controlProps = {
@@ -613,7 +621,7 @@ function URLInput( props ) {
 		const inputProps = {
 			id: inputId,
 			value,
-			required: true,
+			required: required ?? true,
 			type: 'text',
 			onChange,
 			onFocus,
@@ -632,13 +640,35 @@ function URLInput( props ) {
 			suffix,
 		};
 
+		const validationProps = {
+			customValidity,
+			...( markWhenOptional !== undefined && {
+				markWhenOptional,
+			} ),
+		};
+
 		if ( renderControl ) {
 			return renderControl( controlProps, inputProps, loading );
 		}
 
+		// Use ValidatedInputControl if customValidity has ever had a non-undefined value.
+		if ( customValidity !== undefined ) {
+			hasRenderedValidationRef.current = true;
+		}
+
+		const MaybeValidatedInputControl = hasRenderedValidationRef.current
+			? ValidatedInputControl
+			: InputControl;
+
 		return (
-			<BaseControl __nextHasNoMarginBottom { ...controlProps }>
-				<InputControl { ...inputProps } __next40pxDefaultSize />
+			<BaseControl { ...controlProps }>
+				<MaybeValidatedInputControl
+					{ ...inputProps }
+					{ ...( hasRenderedValidationRef.current
+						? validationProps
+						: {} ) }
+					__next40pxDefaultSize
+				/>
 				{ loading && <Spinner /> }
 			</BaseControl>
 		);
@@ -647,7 +677,7 @@ function URLInput( props ) {
 	/**
 	 * Renders the suggestions popover.
 	 *
-	 * @return {JSX.Element|null} The suggestions popover or null.
+	 * @return {React.JSX.Element|null} The suggestions popover or null.
 	 */
 	const renderSuggestionsComponent = () => {
 		if ( ! shouldShowSuggestionsPopover ) {

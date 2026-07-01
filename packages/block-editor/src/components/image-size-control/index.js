@@ -91,7 +91,6 @@ export default function ImageSizeControl( {
 		<VStack className="block-editor-image-size-control" spacing="4">
 			{ imageSizeOptions && imageSizeOptions.length > 0 && (
 				<SelectControl
-					__nextHasNoMarginBottom
 					label={ __( 'Resolution' ) }
 					value={ slug }
 					options={ imageSizeOptions }
@@ -128,8 +127,6 @@ export default function ImageSizeControl( {
 						onChange={ handleUpdateDimensions }
 						value={ selectedValue }
 						isBlock
-						__next40pxDefaultSize
-						__nextHasNoMarginBottom
 					>
 						{ IMAGE_SIZE_PRESETS.map( ( scale ) => {
 							return (
@@ -137,7 +134,7 @@ export default function ImageSizeControl( {
 									key={ scale }
 									value={ scale }
 									label={ sprintf(
-										/* translators: Percentage value. */
+										/* translators: %d: Percentage value. */
 										__( '%d%%' ),
 										scale
 									) }

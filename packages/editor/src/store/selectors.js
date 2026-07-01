@@ -11,7 +11,6 @@ import { isInTheFuture, getDate } from '@wordpress/date';
 import { addQueryArgs, cleanForSlug } from '@wordpress/url';
 import { createSelector, createRegistrySelector } from '@wordpress/data';
 import deprecated from '@wordpress/deprecated';
-import { Platform } from '@wordpress/element';
 import { store as blockEditorStore } from '@wordpress/block-editor';
 import { store as coreStore } from '@wordpress/core-data';
 import { store as preferencesStore } from '@wordpress/preferences';
@@ -20,6 +19,7 @@ import { store as preferencesStore } from '@wordpress/preferences';
  * Internal dependencies
  */
 import {
+	ATTACHMENT_POST_TYPE,
 	EDIT_MERGE_PROPERTIES,
 	PERMALINK_POSTNAME_REGEX,
 	ONE_MINUTE_IN_MS,
@@ -29,6 +29,7 @@ import { getPostRawValue } from './reducer';
 import { getTemplatePartIcon } from '../utils/get-template-part-icon';
 import { unlock } from '../lock-unlock';
 import { getTemplateInfo } from '../utils/get-template-info';
+import { getDeviceTypeByCanvasWidth } from '../utils/device-type';
 
 /**
  * Shared reference to an empty object for cases where it is important to avoid
@@ -195,7 +196,7 @@ export function getCurrentPostType( state ) {
  *
  * @param {Object} state Global application state.
  *
- * @return {?number} ID of current post.
+ * @return {?(number|string)} The current post ID (number) or template slug (string).
  */
 export function getCurrentPostId( state ) {
 	return state.postId;
@@ -330,10 +331,14 @@ const getNestedEditedPostProperty = createSelector(
  * 	const getFeaturedMediaUrl = useSelect( ( select ) => {
  * 		const getFeaturedMediaId =
  * 			select( 'core/editor' ).getEditedPostAttribute( 'featured_media' );
- * 		const getMedia = select( 'core' ).getMedia( getFeaturedMediaId );
+ * 		const media = select( 'core' ).getEntityRecord(
+ * 			'postType',
+ * 			'attachment',
+ * 			getFeaturedMediaId
+ * 		);
  *
  * 		return (
- * 			getMedia?.media_details?.sizes?.large?.source_url || getMedia?.source_url || ''
+ * 			media?.media_details?.sizes?.large?.source_url || media?.source_url || ''
  * 		);
  * }, [] );
  *```
@@ -385,12 +390,6 @@ export const getAutosaveAttribute = createRegistrySelector(
 		}
 
 		const postType = getCurrentPostType( state );
-
-		// Currently template autosaving is not supported.
-		if ( postType === 'wp_template' ) {
-			return false;
-		}
-
 		const postId = getCurrentPostId( state );
 		const currentUserId = select( coreStore ).getCurrentUser()?.id;
 		const autosave = select( coreStore ).getAutosave(
@@ -488,6 +487,11 @@ export function isEditedPostPublishable( state ) {
 	//
 	//  See: <PostPublishButton /> (`isButtonEnabled` assigned by `isSaveable`).
 
+	// Attachments should only be publishable if they have unsaved changes.
+	if ( post.type === ATTACHMENT_POST_TYPE ) {
+		return isEditedPostDirty( state );
+	}
+
 	return (
 		isEditedPostDirty( state ) ||
 		[ 'publish', 'private', 'future' ].indexOf( post.status ) === -1
@@ -520,8 +524,7 @@ export function isEditedPostSaveable( state ) {
 	return (
 		!! getEditedPostAttribute( state, 'title' ) ||
 		!! getEditedPostAttribute( state, 'excerpt' ) ||
-		! isEditedPostEmpty( state ) ||
-		Platform.OS === 'native'
+		! isEditedPostEmpty( state )
 	);
 }
 
@@ -610,9 +613,9 @@ export const isEditedPostAutosaveable = createRegistrySelector(
 		}
 
 		const postType = getCurrentPostType( state );
+		const postTypeObject = select( coreStore ).getPostType( postType );
 
-		// Currently template autosaving is not supported.
-		if ( postType === 'wp_template' ) {
+		if ( ! postTypeObject?.supports?.autosave ) {
 			return false;
 		}
 
@@ -1084,6 +1087,26 @@ export function isPostSavingLocked( state ) {
  *
  * @param {Object} state Global application state.
  *
+ * @example
+ * ```jsx
+ * import { __ } from '@wordpress/i18n';
+ * import { store as editorStore } from '@wordpress/editor';
+ * import { useSelect } from '@wordpress/data';
+ *
+ * const ExampleComponent = () => {
+ * 	const isAutoSavingLocked = useSelect(
+ * 		( select ) => select( editorStore ).isPostAutosavingLocked(),
+ * 		[]
+ * 	);
+ *
+ * 	return isAutoSavingLocked ? (
+ * 		<p>{ __( 'Post auto saving is locked' ) }</p>
+ * 	) : (
+ * 		<p>{ __( 'Post auto saving is not locked' ) }</p>
+ * 	);
+ * };
+ * ```
+ *
  * @return {boolean} Is locked.
  */
 export function isPostAutosavingLocked( state ) {
@@ -1229,6 +1252,12 @@ export const isEditorPanelOpened = createRegistrySelector(
 /**
  * A block selection object.
  *
+ * This type is duplicated to avoid creating circular dependencies.
+ *
+ * @see {import("@wordpress/block-editor/src/store/actions").WPBlockSelection}
+ * @see {import("@wordpress/block-editor/src/store/selectors").WPBlockSelection}
+ * @see {import("@wordpress/core-data/src/types").WPBlockSelection}
+ *
  * @typedef {Object} WPBlockSelection
  *
  * @property {string} clientId     A block client ID.
@@ -1324,7 +1353,8 @@ export const getDeviceType = createRegistrySelector(
 		if ( isZoomOut ) {
 			return 'Desktop';
 		}
-		return state.deviceType;
+		const canvasWidth = state.canvasWidth;
+		return getDeviceTypeByCanvasWidth( canvasWidth );
 	}
 );
 
@@ -1841,8 +1871,6 @@ export const getPostTypeLabel = createRegistrySelector(
 	( select ) => ( state ) => {
 		const currentPostType = getCurrentPostType( state );
 		const postType = select( coreStore ).getPostType( currentPostType );
-		// Disable reason: Post type labels object is shaped like this.
-		// eslint-disable-next-line camelcase
 		return postType?.labels?.singular_name;
 	}
 );

@@ -12,6 +12,7 @@ import deprecated from '@wordpress/deprecated';
 import { createRoot, StrictMode } from '@wordpress/element';
 import { privateApis as editorPrivateApis } from '@wordpress/editor';
 import { store as preferencesStore } from '@wordpress/preferences';
+import { applyFilters } from '@wordpress/hooks';
 import {
 	registerLegacyWidgetBlock,
 	registerWidgetGroupBlock,
@@ -20,7 +21,6 @@ import {
 /**
  * Internal dependencies
  */
-import './hooks';
 import { store as editSiteStore } from './store';
 import { unlock } from './lock-unlock';
 import App from './components/app';
@@ -61,6 +61,16 @@ export function initializeEditor( id, settings ) {
 		welcomeGuideTemplate: true,
 	} );
 
+	const collaborationNotificationPreferenceDefaults = applyFilters(
+		'editor.CollaborationNotificationPreferenceDefaults',
+		{
+			showCollaborationJoinNotifications: true,
+			showCollaborationLeaveNotifications: true,
+			showCollaborationPostSaveNotifications: true,
+		},
+		'core/edit-site'
+	);
+
 	dispatch( preferencesStore ).setDefaults( 'core', {
 		allowRightClickOverrides: true,
 		distractionFree: false,
@@ -74,9 +84,16 @@ export function initializeEditor( id, settings ) {
 		showBlockBreadcrumbs: true,
 		showListViewByDefault: false,
 		enableChoosePatternModal: true,
+		showCollaborationCursor: false,
+		showCollaborationJoinNotifications:
+			collaborationNotificationPreferenceDefaults.showCollaborationJoinNotifications,
+		showCollaborationLeaveNotifications:
+			collaborationNotificationPreferenceDefaults.showCollaborationLeaveNotifications,
+		showCollaborationPostSaveNotifications:
+			collaborationNotificationPreferenceDefaults.showCollaborationPostSaveNotifications,
 	} );
 
-	if ( window.__experimentalMediaProcessing ) {
+	if ( window.__clientSideMediaProcessing ) {
 		dispatch( preferencesStore ).setDefaults( 'core/media', {
 			requireApproval: true,
 			optimizeOnUpload: true,
@@ -108,7 +125,3 @@ export function reinitializeEditor() {
 export { default as PluginTemplateSettingPanel } from './components/plugin-template-setting-panel';
 export { store } from './store';
 export * from './deprecated';
-
-// Temporary: While the posts dashboard is being iterated on
-// it's being built in the same package as the site editor.
-export { initializePostsDashboard } from './posts';
