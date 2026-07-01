@@ -9,10 +9,12 @@ import clsx from 'clsx';
 import { __, sprintf, _n } from '@wordpress/i18n';
 import {
 	useEffect,
+	useLayoutEffect,
 	useRef,
 	useCallback,
 	useMemo,
 	useReducer,
+	useState,
 } from '@wordpress/element';
 import { UP, DOWN, ENTER, TAB } from '@wordpress/keycodes';
 import {
@@ -205,6 +207,16 @@ function URLInput( props ) {
 	const autocompleteRef = useRef( autocompleteRefProp?.current );
 	const suggestionNodes = useRef( [] );
 	const suggestionsRequestRef = useRef( null );
+
+	// Track whether ValidatedInputControl has ever been used, so we don't switch back to InputControl.
+	const [ hasRenderedValidation, setHasRenderedValidation ] =
+		useState( false );
+
+	useLayoutEffect( () => {
+		if ( customValidity !== undefined && ! hasRenderedValidation ) {
+			setHasRenderedValidation( true );
+		}
+	}, [ customValidity, hasRenderedValidation ] );
 
 	// Fetch link suggestions from the block editor store if not provided via props.
 	const { fetchLinkSuggestionsFromStore } = useSelect(
@@ -655,18 +667,19 @@ function URLInput( props ) {
 			} ),
 		};
 
-		// Use ValidatedInputControl if customValidity has been provided.
-		const MaybeValidatedInputControl =
-			customValidity !== undefined ? ValidatedInputControl : InputControl;
+		// Once ValidatedInputControl has been used, keep using it to avoid remounting.
+		const useValidated =
+			customValidity !== undefined || hasRenderedValidation;
+		const MaybeValidatedInputControl = useValidated
+			? ValidatedInputControl
+			: InputControl;
 
 		return (
 			<BaseControl { ...controlProps }>
 				<MaybeValidatedInputControl
 					{ ...inputProps }
 					ref={ inputRef }
-					{ ...( customValidity !== undefined
-						? validationProps
-						: {} ) }
+					{ ...( useValidated ? validationProps : {} ) }
 					__next40pxDefaultSize
 				/>
 				{ loading && <Spinner /> }
