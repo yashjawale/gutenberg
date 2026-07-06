@@ -213,13 +213,7 @@ function Layout() {
 										<SaveHub />
 										<SavePanel />
 									</>
-								) : (
-									<ThemeProvider color={ CONTENT_COLOR }>
-										<ErrorBoundary>
-											{ areas.preview }
-										</ErrorBoundary>
-									</ThemeProvider>
-								) }
+								) : null }
 							</SidebarNavigationProvider>
 						</div>
 					) }
@@ -254,51 +248,55 @@ function Layout() {
 						</div>
 					) }
 
-					{ ! isMobileViewport && areas.preview && (
-						<div className="edit-site-layout__canvas-container">
+					{ areas.preview && (
+						<div
+							className="edit-site-layout__canvas-container"
+							style={
+								isMobileViewport && canvas !== 'edit'
+									? { display: 'none' }
+									: undefined
+							}
+						>
 							{ canvasResizer }
-							{ !! canvasSize.width && (
-								<div
-									className={ clsx(
-										'edit-site-layout__canvas',
-										{
-											'is-right-aligned':
-												isResizableFrameOversized,
+							<div
+								className={ clsx( 'edit-site-layout__canvas', {
+									'is-right-aligned':
+										isResizableFrameOversized,
+								} ) }
+								ref={ animationRef }
+							>
+								<ErrorBoundary>
+									<ResizableFrame
+										isReady={ ! isEditorLoading }
+										isFullWidth={ canvas === 'edit' }
+										defaultSize={
+											canvasSize.width
+												? {
+														width:
+															canvasSize.width -
+															24 /* $canvas-padding */,
+														height: canvasSize.height,
+												  }
+												: { width: 1300, height: 900 }
 										}
-									) }
-									ref={ animationRef }
-								>
-									<ErrorBoundary>
-										<ResizableFrame
-											isReady={ ! isEditorLoading }
-											isFullWidth={ canvas === 'edit' }
-											defaultSize={ {
-												width:
-													canvasSize.width -
-													24 /* $canvas-padding */,
-												height: canvasSize.height,
-											} }
-											isOversized={
-												isResizableFrameOversized
-											}
-											setIsOversized={
-												setIsResizableFrameOversized
-											}
-											innerContentStyle={ {
-												background:
-													gradientValue ??
-													backgroundColor,
-											} }
-										>
-											<ThemeProvider
-												color={ CONTENT_COLOR }
-											>
-												{ areas.preview }
-											</ThemeProvider>
-										</ResizableFrame>
-									</ErrorBoundary>
-								</div>
-							) }
+										isOversized={
+											isResizableFrameOversized
+										}
+										setIsOversized={
+											setIsResizableFrameOversized
+										}
+										innerContentStyle={ {
+											background:
+												gradientValue ??
+												backgroundColor,
+										} }
+									>
+										<ThemeProvider color={ CONTENT_COLOR }>
+											{ areas.preview }
+										</ThemeProvider>
+									</ResizableFrame>
+								</ErrorBoundary>
+							</div>
 						</div>
 					) }
 				</div>

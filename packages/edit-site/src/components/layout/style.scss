@@ -1,17 +1,17 @@
-@use "@wordpress/base-styles/mixins" as *;
-@use "@wordpress/base-styles/variables" as *;
-@use "@wordpress/base-styles/z-index" as *;
+@use '@wordpress/base-styles/mixins' as *;
+@use '@wordpress/base-styles/variables' as *;
+@use '@wordpress/base-styles/z-index' as *;
 
 .edit-site-layout {
 	height: 100%;
-	background: var(--wpds-color-background-surface-neutral-weak);
-	color: var(--wpds-color-foreground-content-neutral);
+	background: var( --wpds-color-background-surface-neutral-weak );
+	color: var( --wpds-color-foreground-content-neutral );
 	display: flex;
 	flex-direction: column;
 
 	// Show a dark background in "frame" mode to avoid edge artifacts.
-	&:not(.is-full-canvas) .editor-visual-editor {
-		background: var(--wpds-color-background-surface-neutral-weak);
+	&:not( .is-full-canvas ) .editor-visual-editor {
+		background: var( --wpds-color-background-surface-neutral-weak );
 	}
 }
 
@@ -34,9 +34,9 @@
 	// This is only necessary for the exit animation
 	.edit-site-layout.is-full-canvas & {
 		position: fixed !important;
-		height: calc(100vh - var(--wp-admin--admin-bar--height, 0px));
+		height: calc( 100vh - var( --wp-admin--admin-bar--height, 0px ) );
 		left: 0;
-		top: var(--wp-admin--admin-bar--height, 0);
+		top: var( --wp-admin--admin-bar--height, 0 );
 	}
 
 	.edit-site-layout__sidebar {
@@ -92,8 +92,8 @@
 // (not the inner content element) so it also covers the wrapper's
 // reserved scrollbar gutter, preventing the theme background color from
 // bleeding through.
-.edit-site-sidebar__screen-wrapper:has(.edit-site-layout__mobile-content) {
-	background: var(--wpds-color-background-surface-neutral);
+.edit-site-sidebar__screen-wrapper:has( .edit-site-layout__mobile-content ) {
+	background: var( --wpds-color-background-surface-neutral );
 }
 
 .edit-site-layout__canvas-container {
@@ -107,6 +107,15 @@
 .edit-site-layout__canvas {
 	position: absolute;
 	top: 0;
+
+	// Ensure the canvas fills the full width on mobile in edit mode
+	// (the re-resizable library used by ResizableFrame can miscalculate
+	// widths when parent has display: flex).
+	.edit-site-layout.is-full-canvas & {
+		.components-resizable-box__container {
+			width: 100% !important;
+		}
+	}
 	left: 0;
 	bottom: 0;
 	width: 100%;
@@ -119,25 +128,27 @@
 	}
 
 	.edit-site-resizable-frame__inner {
-		color: var(--wpds-color-foreground-content-neutral);
+		color: var( --wpds-color-foreground-content-neutral );
 	}
 
 	@include break-medium {
 		top: $canvas-padding;
 		bottom: $canvas-padding;
-		width: calc(100% - #{$canvas-padding});
+		width: calc( 100% - #{$canvas-padding} );
 
 		.edit-site-resizable-frame__inner-content {
 			box-shadow: $elevation-x-small;
 			// This ensure the radius work properly.
 			overflow: hidden;
 
-			@media not (prefers-reduced-motion) {
-				transition: border-radius, box-shadow 0.4s;
+			@media not ( prefers-reduced-motion ) {
+				transition:
+					border-radius,
+					box-shadow 0.4s;
 			}
 
-			.edit-site-layout:not(.is-full-canvas) & {
-				border-radius: var(--wpds-border-radius-xl);
+			.edit-site-layout:not( .is-full-canvas ) & {
+				border-radius: var( --wpds-border-radius-xl );
 			}
 
 			&:hover {
@@ -165,26 +176,28 @@
 	height: 100%;
 }
 
-html.canvas-mode-edit-transition::view-transition-group(toggle) {
+html.canvas-mode-edit-transition::view-transition-group( toggle ) {
 	animation-delay: 255ms;
 }
 
-@media (prefers-reduced-motion) {
-	::view-transition-group(*),
-	::view-transition-old(*),
-	::view-transition-new(*) {
+@media ( prefers-reduced-motion ) {
+	::view-transition-group( * ),
+	::view-transition-old( * ),
+	::view-transition-new( * ) {
 		animation: none !important;
 	}
 }
 
-.edit-site-layout.is-full-canvas .edit-site-layout__sidebar-region .edit-site-layout__view-mode-toggle {
+.edit-site-layout.is-full-canvas
+	.edit-site-layout__sidebar-region
+	.edit-site-layout__view-mode-toggle {
 	display: none;
 }
 
 .edit-site-layout__view-mode-toggle.components-button {
 	view-transition-name: toggle;
 	position: relative;
-	color: var(--wpds-color-foreground-interactive-neutral);
+	color: var( --wpds-color-foreground-interactive-neutral );
 	height: $header-height;
 	width: $header-height;
 	overflow: hidden;
@@ -192,23 +205,25 @@ html.canvas-mode-edit-transition::view-transition-group(toggle) {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: var(--wpds-color-background-surface-neutral-weak);
+	background: var( --wpds-color-background-surface-neutral-weak );
 	border-radius: 0;
 
 	&:hover,
 	&:active {
-		color: var(--wpds-color-foreground-interactive-neutral-active);
+		color: var( --wpds-color-foreground-interactive-neutral-active );
 	}
 
 	&:focus-visible,
 	&:focus {
-		box-shadow: 0 0 0 3px #1e1e1e, 0 0 0 6px var(--wp-admin-theme-color);
+		box-shadow:
+			0 0 0 3px #1e1e1e,
+			0 0 0 6px var( --wp-admin-theme-color );
 		outline: 4px solid #0000;
 		outline-offset: 4px;
 	}
 
 	&::before {
-		content: "";
+		content: '';
 		display: block;
 		position: absolute;
 		top: $grid-unit-10 + $border-width;
@@ -218,7 +233,7 @@ html.canvas-mode-edit-transition::view-transition-group(toggle) {
 		border-radius: $radius-medium;
 		box-shadow: none;
 
-		@media not (prefers-reduced-motion) {
+		@media not ( prefers-reduced-motion ) {
 			transition: box-shadow 0.1s ease;
 		}
 	}
@@ -233,15 +248,15 @@ html.canvas-mode-edit-transition::view-transition-group(toggle) {
 }
 
 .edit-site-layout__actions {
-	z-index: z-index(".edit-site-layout__actions");
+	z-index: z-index( '.edit-site-layout__actions' );
 	position: fixed !important; // Need to override the default relative positioning
 	top: -9999em;
 	bottom: auto;
 	left: auto;
 	right: 0;
 	width: $sidebar-width;
-	color: var(--wpds-color-foreground-content-neutral);
-	background: var(--wpds-color-background-surface-neutral-strong);
+	color: var( --wpds-color-foreground-content-neutral );
+	background: var( --wpds-color-background-surface-neutral-strong );
 
 	&:focus,
 	&:focus-within {
@@ -252,14 +267,13 @@ html.canvas-mode-edit-transition::view-transition-group(toggle) {
 	&.is-entity-save-view-open {
 		&:focus,
 		&:focus-within {
-			top: var(--wp-admin--admin-bar--height, 0);
+			top: var( --wp-admin--admin-bar--height, 0 );
 		}
 	}
 
 	@include break-medium {
-		border-left:
-			$border-width solid
-			var(--wpds-color-stroke-surface-neutral);
+		border-left: $border-width solid
+			var( --wpds-color-stroke-surface-neutral );
 	}
 }
 
@@ -269,7 +283,7 @@ html.canvas-mode-edit-transition::view-transition-group(toggle) {
 	overflow: hidden;
 	box-shadow: $elevation-x-small;
 	@include break-medium() {
-		border-radius: var(--wpds-border-radius-xl);
+		border-radius: var( --wpds-border-radius-xl );
 		margin: $canvas-padding $canvas-padding $canvas-padding 0;
 	}
 }
