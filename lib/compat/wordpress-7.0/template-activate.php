@@ -263,6 +263,7 @@ $template_types = array(
 	'author',
 	'date',
 	'archive',
+	'maintenance',
 );
 
 // Unfortunately, there is no general filter.
@@ -839,4 +840,89 @@ function gutenberg_get_block_templates( $output, $query = array(), $template_typ
 	 * @param string              $template_type wp_template or wp_template_part.
 	 */
 	return apply_filters( 'get_block_templates', $query_result, $query, $template_type );
+}
+
+/**
+ * Add 'maintenance' to the default block template types so it appears
+ * as an available template in the Site Editor's "Add New Template" menu.
+ * When a user creates it, it will be stored as a wp_template post.
+ * Until then, the default WordPress maintenance behavior applies.
+ */
+add_filter( 'default_template_types', 'gutenberg_add_maintenance_template_type' );
+function gutenberg_add_maintenance_template_type( $template_types ) {
+	$template_types['maintenance'] = array(
+		'title'       => _x( 'Maintenance Mode', 'Template name' ),
+		'description' => __( 'Displays when the site is in maintenance mode.' ),
+	);
+	return $template_types;
+}
+
+/**
+ * Checks whether a maintenance block template exists.
+ *
+ * @return bool True if a maintenance template exists.
+ */
+function gutenberg_has_maintenance_template() {
+	$templates = get_block_templates( array( 'slug__in' => array( 'maintenance' ) ) );
+	return ! empty( $templates );
+}
+
+/**
+ * Checks if maintenance mode should be active by inspecting the .maintenance file.
+ *
+ * @return bool True if maintenance mode should be active.
+ */
+function gutenberg_is_maintenance_mode() {
+	if ( ! file_exists( ABSPATH . '.maintenance' ) || wp_installing() ) {
+		return false;
+	}
+
+	require ABSPATH . '.maintenance';
+
+	global $upgrading;
+
+	if ( ( time() - $upgrading ) >= 10 * MINUTE_IN_SECONDS ) {
+		return false;
+	}
+
+	return true;
+}
+
+/**
+ * Serves the maintenance block template when the site is in maintenance mode
+ * and a maintenance template exists.
+ *
+ * @param string $template The path to the template file.
+ * @return string
+ */
+add_filter( 'template_include', 'gutenberg_serve_maintenance_template', 100 );
+function gutenberg_serve_maintenance_template( $template ) {
+	if (
+		! gutenberg_is_maintenance_mode() ||
+		! current_theme_supports( 'block-templates' )
+	) {
+		return $template;
+	}
+
+	$block_template = get_block_templates( array( 'slug__in' => array( 'maintenance' ) ) );
+	if ( empty( $block_template ) ) {
+		return $template;
+	}
+
+	return locate_block_template( $template, 'maintenance', array( 'maintenance' ) );
+}
+
+/**
+ * Preview the maintenance block template via query parameter.
+ */
+add_filter( 'template_include', 'gutenberg_preview_maintenance_template', 100 );
+function gutenberg_preview_maintenance_template( $template ) {
+	if (
+		! isset( $_GET['wp_maintenance_preview'] ) ||
+		! current_theme_supports( 'block-templates' )
+	) {
+		return $template;
+	}
+
+	return locate_block_template( $template, 'maintenance', array( 'maintenance' ) );
 }

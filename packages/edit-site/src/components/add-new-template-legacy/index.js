@@ -25,6 +25,7 @@ import {
 	blockMeta,
 	calendar,
 	category,
+	cog,
 	commentAuthorAvatar,
 	pencil,
 	home,
@@ -78,6 +79,7 @@ const DEFAULT_TEMPLATE_SLUGS = [
 	'tag',
 	'search',
 	'404',
+	'maintenance',
 ];
 
 const TEMPLATE_ICONS = {
@@ -95,6 +97,7 @@ const TEMPLATE_ICONS = {
 	date: calendar,
 	tag,
 	attachment: media,
+	maintenance: cog,
 };
 
 function TemplateListItem( {
